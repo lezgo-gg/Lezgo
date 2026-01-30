@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LFG.gg - Trouve ton groupe LoL</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav id="navbar" class="navbar">
+      <div class="navbar-brand">
+        <span class="logo">LFG</span><span class="logo-accent">.gg</span>
+      </div>
+      <div class="navbar-actions" id="navbar-actions">
+        <button class="btn btn-ghost" id="btn-login">Se connecter</button>
+        <button class="btn btn-primary" id="btn-register">Rejoindre</button>
+      </div>
+    </nav>
+
+    <!-- Views container -->
+    <main id="app">
+
+      <!-- Landing View -->
+      <section id="view-landing" class="view active">
+        <div class="hero">
+          <div class="hero-glow"></div>
+          <div class="hero-content">
+            <div class="hero-badge">Gratuit &middot; Open &middot; Francophone</div>
+            <h1>Trouve ton <span class="text-gradient">groupe</span> parfait</h1>
+            <p class="hero-subtitle">
+              Fini les randoms toxiques. Trouve des joueurs LoL
+              qui matchent ton rank, tes horaires et ton mindset.
+            </p>
+            <div class="hero-cta">
+              <button class="btn btn-discord btn-lg" id="hero-join">
+                <svg width="20" height="15" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1A60 60 0 00.4 45a.2.2 0 00.1.2 58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.6 38.6 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.3 36.3 0 01-5.5 2.7.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.5 58.5 0 0070.1 45.2a.2.2 0 000-.2A59.7 59.7 0 0060.2 5a.2.2 0 00-.1 0zM23.7 36.9c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.8 7.1-6.3 7.1zm23.2 0c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.7 7.1-6.3 7.1z"/></svg>
+                Rejoindre avec Discord
+              </button>
+              <button class="btn btn-ghost btn-lg" id="hero-browse">Parcourir les communautes</button>
+            </div>
+            <div class="hero-stats">
+              <div class="stat">
+                <span class="stat-number" id="stat-players">0</span>
+                <span class="stat-label">Joueurs</span>
+              </div>
+              <div class="stat">
+                <span class="stat-number">&infin;</span>
+                <span class="stat-label">Ranks</span>
+              </div>
+              <div class="stat">
+                <span class="stat-number">1</span>
+                <span class="stat-label">Clic pour add</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="features">
+          <div class="feature-card" style="--delay:0">
+            <div class="feature-icon">&#9876;</div>
+            <h3>Rank verifie</h3>
+            <p>Ton rank est pull directement de l'API Riot. Pas de triche, pas de fake.</p>
+          </div>
+          <div class="feature-card" style="--delay:1">
+            <div class="feature-icon">&#128268;</div>
+            <h3>Filtres precis</h3>
+            <p>Filtre par rank, role, horaires et style de jeu. Trouve exactement qui tu cherches.</p>
+          </div>
+          <div class="feature-card" style="--delay:2">
+            <div class="feature-icon">&#127918;</div>
+            <h3>Add en 1 clic</h3>
+            <p>Connecte via Discord. Un clic pour ajouter quelqu'un en ami. Zero friction.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Auth Modal -->
+      <div id="modal-auth" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content auth-discord-modal">
+          <button class="modal-close" id="modal-auth-close">&times;</button>
+          <div class="auth-discord-content">
+            <h2>Rejoins LFG.gg</h2>
+            <p class="auth-discord-subtitle">Connecte-toi avec Discord pour trouver ton groupe et etre ajoute en ami facilement.</p>
+            <button class="btn btn-discord btn-block btn-lg" id="btn-discord-login">
+              <svg width="20" height="15" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1A60 60 0 00.4 45a.2.2 0 00.1.2 58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.6 38.6 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.3 36.3 0 01-5.5 2.7.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.5 58.5 0 0070.1 45.2a.2.2 0 000-.2A59.7 59.7 0 0060.2 5a.2.2 0 00-.1 0zM23.7 36.9c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.8 7.1-6.3 7.1zm23.2 0c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.7 7.1-6.3 7.1z"/></svg>
+              Se connecter avec Discord
+            </button>
+            <p class="auth-discord-note">Inscription et connexion en un clic. Aucun mot de passe.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile View (with Profil / Analyse tabs) -->
+      <section id="view-profile" class="view hidden">
+        <div class="container profile-container">
+
+          <!-- Profile Header -->
+          <div class="dashboard-header" id="dashboard-header">
+            <button class="btn btn-ghost btn-back-profile hidden" id="btn-back-profile">&larr; Retour a mon profil</button>
+            <div class="dashboard-identity">
+              <img id="dashboard-icon" class="dashboard-avatar" src="" alt="" />
+              <div>
+                <h2 id="dashboard-riot-name" class="dashboard-name"></h2>
+                <div class="dashboard-meta">
+                  <span id="dashboard-rank" class="dashboard-rank"></span>
+                  <span id="dashboard-level" class="dashboard-level"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="profile-tabs">
+            <button class="profile-tab active" data-tab="tab-form">Profil</button>
+            <button class="profile-tab" data-tab="tab-analyse">Analyse</button>
+          </div>
+
+          <!-- TAB: Profil Form -->
+          <div id="tab-form" class="profile-tab-content active">
+            <form id="profile-form" class="profile-form">
+              <div class="form-section">
+                <h3>Identite Riot</h3>
+                <div class="riot-id-row">
+                  <div class="form-group flex-1">
+                    <label for="riot-name">Game Name</label>
+                    <input type="text" id="riot-name" placeholder="Faker" required />
+                  </div>
+                  <span class="riot-separator">#</span>
+                  <div class="form-group" style="width: 120px">
+                    <label for="riot-tag">Tag</label>
+                    <input type="text" id="riot-tag" placeholder="EUW" required />
+                  </div>
+                  <button type="button" class="btn btn-secondary" id="btn-verify-riot">Verifier</button>
+                </div>
+                <div id="riot-verify-result" class="verify-result hidden"></div>
+              </div>
+
+              <div class="form-section">
+                <h3>Rank</h3>
+                <div class="rank-display" id="rank-display">
+                  <span class="rank-placeholder">Verifie ton Riot ID pour afficher ton rank</span>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Roles preferes</h3>
+                <div class="checkbox-group roles-group">
+                  <label class="chip-checkbox"><input type="checkbox" name="roles" value="TOP" /><span class="chip">TOP</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="roles" value="JUNGLE" /><span class="chip">JGL</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="roles" value="MID" /><span class="chip">MID</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="roles" value="ADC" /><span class="chip">ADC</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="roles" value="SUPPORT" /><span class="chip">SUP</span></label>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Horaires de jeu</h3>
+                <div class="checkbox-group">
+                  <label class="chip-checkbox"><input type="checkbox" name="schedule" value="MATIN" /><span class="chip">Matin</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="schedule" value="APRES_MIDI" /><span class="chip">Aprem</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="schedule" value="SOIR" /><span class="chip">Soir</span></label>
+                  <label class="chip-checkbox"><input type="checkbox" name="schedule" value="NUIT" /><span class="chip">Nuit</span></label>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Style de jeu</h3>
+                <div class="radio-group">
+                  <label class="chip-radio"><input type="radio" name="play_style" value="tryhard" required /><span class="chip">Tryhard Ranked</span></label>
+                  <label class="chip-radio"><input type="radio" name="play_style" value="chill" /><span class="chip">Chill (Normals/ARAM)</span></label>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <h3>Discord</h3>
+                <div class="discord-linked" id="discord-linked">
+                  <img id="discord-avatar-preview" class="discord-avatar-lg" src="" alt="" />
+                  <div class="discord-linked-info">
+                    <span class="discord-linked-name" id="discord-linked-name"></span>
+                    <span class="discord-linked-status">Compte Discord lie</span>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">Sauvegarder mon profil</button>
+            </form>
+          </div>
+
+          <!-- TAB: Analyse -->
+          <div id="tab-analyse" class="profile-tab-content">
+
+            <!-- Action Bar (always visible at top) -->
+            <div class="action-bar" id="action-bar">
+              <div class="action-bar-left">
+                <button class="btn btn-primary" id="btn-analyze">Lancer l'analyse</button>
+                <button class="btn btn-secondary" id="btn-reanalyze">Re-analyser</button>
+                <button class="btn btn-secondary" id="btn-find-duos">Trouver un groupe</button>
+              </div>
+              <div class="action-bar-right">
+                <span id="last-analyzed-label" class="action-bar-info"></span>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div id="analysis-progress" class="analysis-progress hidden">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <span class="progress-label" id="progress-label">Chargement...</span>
+            </div>
+
+            <!-- CTA (only when no analytics yet) -->
+            <div id="dashboard-cta" class="dashboard-cta">
+              <h3>Analyse ton gameplay</h3>
+              <p>Lance une analyse de tes 10 derniers matchs ranked pour decouvrir tes forces, faiblesses et champion pool.</p>
+            </div>
+
+            <!-- Analytics content (shown after analysis) -->
+            <div id="dashboard-analytics" class="dashboard-analytics hidden">
+
+              <!-- LP Progression Chart -->
+              <div class="dashboard-section">
+                <h3>Progression LP</h3>
+                <div id="lp-chart-container"></div>
+              </div>
+
+              <!-- Overview stats row -->
+              <div class="stats-row" id="stats-row"></div>
+
+              <!-- Performance stats row 2 -->
+              <div class="stats-row stats-row-secondary" id="stats-row-2"></div>
+
+              <!-- Strengths & Weaknesses -->
+              <div class="sw-grid">
+                <div class="sw-col sw-strengths">
+                  <h3>Forces</h3>
+                  <ul id="strengths-list"></ul>
+                </div>
+                <div class="sw-col sw-weaknesses">
+                  <h3>Faiblesses</h3>
+                  <ul id="weaknesses-list"></ul>
+                </div>
+              </div>
+
+              <!-- Playstyle Profile -->
+              <div class="dashboard-section">
+                <h3>Profil de jeu</h3>
+                <div id="playstyle-profile"></div>
+              </div>
+
+              <!-- Champion Pool -->
+              <div class="dashboard-section">
+                <h3>Champion Pool</h3>
+                <p class="section-desc">Clique sur un champion pour voir les details</p>
+                <div class="champion-pool" id="champion-pool"></div>
+              </div>
+
+              <!-- Champion Synergies -->
+              <div class="dashboard-section">
+                <h3>Synergies</h3>
+                <p class="section-desc">Champions qui se combinent bien avec ton pool</p>
+                <div id="champion-synergies"></div>
+              </div>
+
+              <!-- Damage Composition -->
+              <div class="dashboard-section">
+                <h3>Composition des Degats</h3>
+                <div id="damage-composition"></div>
+              </div>
+
+              <!-- Roles -->
+              <div class="dashboard-section">
+                <h3>Roles joues</h3>
+                <div class="roles-bars" id="roles-bars"></div>
+              </div>
+
+              <!-- Early Game -->
+              <div class="dashboard-section">
+                <h3>Early Game</h3>
+                <div id="early-game-stats"></div>
+              </div>
+
+              <!-- Tendances -->
+              <div class="dashboard-section">
+                <h3>Tendances</h3>
+                <div class="trends-row" id="trends-row"></div>
+              </div>
+            </div>
+
+            <!-- Match History (op.gg style - always visible if puuid exists) -->
+            <div id="match-history-section" class="dashboard-section match-history-section hidden">
+              <h3>Historique des matchs</h3>
+              <div class="mh-queue-tabs" id="mh-queue-tabs">
+                <button class="mh-queue-tab active" data-queue="">Tout</button>
+                <button class="mh-queue-tab" data-queue="ranked">Ranked Solo</button>
+                <button class="mh-queue-tab" data-queue="normal">Normal</button>
+                <button class="mh-queue-tab" data-queue="tourney">Clash</button>
+              </div>
+              <div id="match-history-list"></div>
+              <div id="match-history-loading" class="mh-loading hidden">Chargement...</div>
+              <div class="mh-load-more-wrap">
+                <button class="btn btn-secondary" id="btn-load-more-matches">Voir plus</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Champion Detail Modal -->
+          <div id="modal-champion" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content modal-champion-detail">
+              <button class="modal-close" id="modal-champion-close">&times;</button>
+              <div id="champion-detail-content"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Browse View -->
+      <section id="view-browse" class="view hidden">
+
+        <!-- Sub-view 1: Server list -->
+        <div id="browse-servers">
+          <div class="browse-servers-header">
+            <h2>Communautes</h2>
+            <p class="browse-servers-subtitle">Rejoins la communaute de ton streamer ou serveur Discord prefere</p>
+          </div>
+          <div class="servers-grid" id="servers-grid">
+            <div class="loading-state">Chargement des communautes...</div>
+          </div>
+        </div>
+
+        <!-- Sub-view 2: Server detail (hidden by default) -->
+        <div id="browse-server-detail" class="hidden">
+          <div class="server-header">
+            <div class="server-header-left">
+              <button class="btn btn-ghost btn-sm" id="btn-back-servers">&larr; Communautes</button>
+              <div class="server-identity">
+                <img id="server-detail-icon" class="server-icon-lg" src="" alt="" />
+                <div>
+                  <h2 id="server-detail-name"></h2>
+                </div>
+              </div>
+            </div>
+            <div class="server-header-right">
+              <button class="btn btn-primary" id="btn-join-server">Rejoindre</button>
+              <button class="btn btn-secondary hidden" id="btn-leave-server">Quitter</button>
+            </div>
+          </div>
+
+          <!-- LFG Section -->
+          <div class="lfg-section">
+            <div class="lfg-header">
+              <h3>Looking for Group</h3>
+              <button class="btn btn-primary btn-sm hidden" id="btn-create-lfg">+ Chercher un groupe</button>
+            </div>
+
+            <!-- LFG creation form (hidden) -->
+            <div id="lfg-form-container" class="lfg-form-container hidden">
+              <form id="lfg-form">
+                <div class="lfg-form-row">
+                  <div class="form-group" style="flex:1">
+                    <label for="lfg-role">Role recherche</label>
+                    <select id="lfg-role">
+                      <option value="">Peu importe</option>
+                      <option value="TOP">TOP</option>
+                      <option value="JUNGLE">JGL</option>
+                      <option value="MID">MID</option>
+                      <option value="ADC">ADC</option>
+                      <option value="SUPPORT">SUP</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="flex:2">
+                    <label for="lfg-note">Note (optionnel)</label>
+                    <input type="text" id="lfg-note" placeholder="Ex: Gold+ chill normals ce soir" maxlength="200" />
+                  </div>
+                </div>
+                <div class="lfg-form-actions">
+                  <button type="submit" class="btn btn-primary btn-sm">Publier</button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="btn-cancel-lfg">Annuler</button>
+                </div>
+              </form>
+            </div>
+
+            <div id="lfg-posts-list"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- Player Detail Modal -->
+      <div id="modal-player" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-player-detail">
+          <button class="modal-close" id="modal-player-close">&times;</button>
+          <div id="player-detail-content"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>
