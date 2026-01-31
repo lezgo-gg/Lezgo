@@ -1,0 +1,45 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install & build frontend
+        run: npm ci && npm run build
+
+      - name: Install server deps
+        run: cd server && npm ci
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy frontend
+        run: |
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_vps" \
+            dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/lezgo/dist/
+
+      - name: Deploy API server
+        run: |
+          rsync -avz --delete \
+            --exclude node_modules --exclude .env \
+            -e "ssh -i ~/.ssh/id_vps" \
+            server/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/lezgo/server/
+
+      - name: Install deps & restart
+        run: |
+          ssh -i ~/.ssh/id_vps ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /var/www/lezgo/server && npm ci --production && pm2 restart lezgo-api"
