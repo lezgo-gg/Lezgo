@@ -94,7 +94,7 @@ export function computeCompatibilityScore(myProfile, otherProfile) {
   const styleScore = computeStyleScore(myProfile.play_style, otherProfile.play_style);
   score += styleScore;
   if (styleScore > 0) {
-    details.push({ label: 'Meme style de jeu', points: styleScore });
+    details.push({ label: 'Même style de jeu', points: styleScore });
   }
 
   // 5. Champion synergies (max 15)

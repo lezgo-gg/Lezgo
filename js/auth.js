@@ -32,6 +32,15 @@ export function initAuthModal() {
 }
 
 async function loginWithDiscord() {
+  const hasToken = !!sessionStorage.getItem('lezgo_access_token');
+  const isStreamerFlow = sessionStorage.getItem('postLoginAction') === 'streamer-tab';
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!hasToken && !session && !isStreamerFlow) {
+    window.showToast('Accede au site depuis ton serveur Discord partenaire.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('btn-discord-login');
   btn.disabled = true;
   btn.textContent = 'Redirection vers Discord...';

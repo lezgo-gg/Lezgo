@@ -98,7 +98,7 @@ function riotApiProxy(apiKey) {
               }
               if (accountRes.status === 403 || accountRes.status === 401) {
                 res.writeHead(403, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Cle API Riot expiree ou invalide. Regenere-la sur developer.riotgames.com' }));
+                res.end(JSON.stringify({ error: 'Clé API Riot expirée ou invalide. Régénère-la sur developer.riotgames.com' }));
                 return;
               }
               res.writeHead(500, { 'Content-Type': 'application/json' });

@@ -108,11 +108,11 @@ async function handleSaveProfile() {
   const style = document.querySelector('#onb-step-2 input[name="onb-play-style"]:checked')?.value;
 
   if (roles.length === 0) {
-    window.showToast('Selectionne au moins un role', 'error');
+    window.showToast('Sélectionne au moins un rôle', 'error');
     return;
   }
   if (schedule.length === 0) {
-    window.showToast('Selectionne au moins un horaire', 'error');
+    window.showToast('Sélectionne au moins un horaire', 'error');
     return;
   }
   if (!style) {
@@ -211,7 +211,7 @@ async function triggerBackgroundAnalysis(puuid, userId) {
       })
       .eq('id', userId);
 
-    if (statusEl) statusEl.textContent = 'Analyse terminee !';
+    if (statusEl) statusEl.textContent = 'Analyse terminée !';
   } catch (err) {
     console.error('Background analysis error:', err);
     if (statusEl) statusEl.textContent = 'Analyse echouee - elle sera relancee plus tard';

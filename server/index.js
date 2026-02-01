@@ -11,6 +11,11 @@ const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const TWITCH_REDIRECT_URI = process.env.TWITCH_REDIRECT_URI;
 
+// --- Discord OAuth config (guilds selection) ---
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+
 if (!API_KEY) {
   console.error('[API] RIOT_API_KEY manquant dans .env');
   process.exit(1);
@@ -118,10 +123,10 @@ async function requireAdmin(req, res, next) {
       // Fallback: check user_metadata from Discord OAuth
       const discordId = user.user_metadata?.provider_id;
       if (discordId !== ADMIN_DISCORD_ID) {
-        return res.status(403).json({ error: 'Acces refuse' });
+        return res.status(403).json({ error: 'Accès refusé' });
       }
     } else if (profile.discord_id !== ADMIN_DISCORD_ID) {
-      return res.status(403).json({ error: 'Acces refuse' });
+      return res.status(403).json({ error: 'Accès refusé' });
     }
 
     req.adminUser = user;
@@ -188,17 +193,23 @@ app.get('/api/admin/servers', requireAdmin, async (req, res) => {
 app.post('/api/admin/servers', requireAdmin, async (req, res) => {
   try {
     const { guild_id, guild_name, guild_icon } = req.body;
+    const isPublic = req.body.public;
     if (!guild_id || !guild_name) {
       return res.status(400).json({ error: 'guild_id et guild_name requis' });
     }
 
+    const upsertData = {
+      guild_id,
+      guild_name,
+      guild_icon: guild_icon || null,
+    };
+    if (typeof isPublic === 'boolean') {
+      upsertData.public = isPublic;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('servers')
-      .upsert({
-        guild_id,
-        guild_name,
-        guild_icon: guild_icon || null,
-      }, { onConflict: 'guild_id' })
+      .upsert(upsertData, { onConflict: 'guild_id' })
       .select()
       .single();
 
@@ -214,6 +225,7 @@ app.post('/api/admin/servers', requireAdmin, async (req, res) => {
 app.post('/api/admin/license', requireAdmin, async (req, res) => {
   try {
     const { server_id, licensed, license_label, license_price, license_started_at, license_expires_at } = req.body;
+    const isPublic = req.body.public;
 
     if (!server_id) {
       return res.status(400).json({ error: 'server_id requis' });
@@ -228,6 +240,10 @@ app.post('/api/admin/license', requireAdmin, async (req, res) => {
     } else {
       // Keep the old data but set licensed to false
       updateData.licensed = false;
+    }
+
+    if (typeof isPublic === 'boolean') {
+      updateData.public = isPublic;
     }
 
     const { data, error } = await supabaseAdmin
@@ -246,17 +262,110 @@ app.post('/api/admin/license', requireAdmin, async (req, res) => {
 });
 
 // =====================================================
+// DISCORD GUILDS OAUTH (server selection)
+// =====================================================
+
+// POST /api/discord/guilds-auth - Returns Discord OAuth URL for guilds scope
+app.post('/api/discord/guilds-auth', requireAuth, async (req, res) => {
+  try {
+    if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_REDIRECT_URI) {
+      return res.status(500).json({ error: 'Discord OAuth non configure' });
+    }
+
+    const state = req.user.id;
+    const params = new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID,
+      response_type: 'code',
+      redirect_uri: DISCORD_REDIRECT_URI,
+      scope: 'guilds',
+      state,
+      prompt: 'none',
+    });
+
+    res.json({ url: `https://discord.com/oauth2/authorize?${params}` });
+  } catch (err) {
+    console.error('[Discord] Guilds auth error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/discord/guilds/callback - Discord OAuth callback, fetches admin guilds
+app.get('/api/discord/guilds/callback', async (req, res) => {
+  try {
+    const { code, state, error: oauthError } = req.query;
+
+    if (oauthError || !code) {
+      return res.redirect('/?guilds_error=' + encodeURIComponent(oauthError || 'no_code'));
+    }
+
+    // Exchange code for access token
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: DISCORD_REDIRECT_URI,
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text();
+      console.error('[Discord] Token exchange failed:', err);
+      return res.redirect('/?guilds_error=token_failed');
+    }
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+
+    // Fetch user's guilds
+    const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!guildsRes.ok) {
+      console.error('[Discord] Guilds fetch failed:', guildsRes.status);
+      return res.redirect('/?guilds_error=guilds_failed');
+    }
+
+    const allGuilds = await guildsRes.json();
+
+    // Filter: only guilds where user has ADMINISTRATOR (0x8) or MANAGE_GUILD (0x20)
+    const ADMIN_FLAG = 0x8;
+    const MANAGE_GUILD_FLAG = 0x20;
+    const adminGuilds = allGuilds
+      .filter(g => (parseInt(g.permissions) & ADMIN_FLAG) || (parseInt(g.permissions) & MANAGE_GUILD_FLAG))
+      .map(g => ({ id: g.id, name: g.name, icon: g.icon }));
+
+    // Revoke the token (we don't need it anymore)
+    fetch('https://discord.com/api/oauth2/token/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        token: accessToken,
+      }),
+    }).catch(() => {});
+
+    // Encode guilds as base64 and redirect
+    const encoded = Buffer.from(JSON.stringify(adminGuilds)).toString('base64url');
+    res.redirect('/?guilds=' + encoded);
+  } catch (err) {
+    console.error('[Discord] Guilds callback error:', err.message);
+    res.redirect('/?guilds_error=server_error');
+  }
+});
+
+// =====================================================
 // STREAMER REQUEST ROUTES
 // =====================================================
 
-// POST /api/request-license - Streamer submits a license request
+// POST /api/request-license - Streamer submits a license request (no guild required)
 app.post('/api/request-license', requireAuth, async (req, res) => {
   try {
-    const { guild_id, guild_name, guild_icon } = req.body;
-    if (!guild_id || !guild_name) {
-      return res.status(400).json({ error: 'guild_id et guild_name requis' });
-    }
-
     const user = req.user;
     const meta = user.user_metadata || {};
     const identity = (user.identities || []).find(i => i.provider === 'discord');
@@ -265,16 +374,15 @@ app.post('/api/request-license', requireAuth, async (req, res) => {
     const discord_username = meta.full_name || meta.name || identityData.full_name || '';
     const discord_avatar = meta.avatar_url || identityData.avatar_url || '';
 
-    // Check for duplicate pending/payment_received request for same guild
+    // Check for existing pending/payment_received request
     const { data: existing } = await supabaseAdmin
       .from('server_requests')
       .select('id, status')
       .eq('user_id', user.id)
-      .eq('guild_id', guild_id)
       .in('status', ['pending', 'payment_received']);
 
     if (existing && existing.length > 0) {
-      return res.status(409).json({ error: 'Une demande est deja en cours pour ce serveur' });
+      return res.status(409).json({ error: 'Une demande est deja en cours' });
     }
 
     const { data, error } = await supabaseAdmin
@@ -284,9 +392,6 @@ app.post('/api/request-license', requireAuth, async (req, res) => {
         discord_id,
         discord_username,
         discord_avatar,
-        guild_id,
-        guild_name,
-        guild_icon: guild_icon || null,
       })
       .select()
       .single();
@@ -312,6 +417,53 @@ app.get('/api/my-requests', requireAuth, async (req, res) => {
     res.json(data || []);
   } catch (err) {
     console.error('[Request] My requests error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/my-requests/:id/twitch - Attach Twitch data to a pending request
+app.put('/api/my-requests/:id/twitch', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      twitch_id, twitch_username, twitch_display_name, twitch_avatar,
+      twitch_followers, twitch_broadcaster_type, twitch_avg_viewers, license_price,
+    } = req.body;
+
+    // Verify request belongs to user and is pending
+    const { data: request, error: fetchErr } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, user_id, status')
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .eq('status', 'pending')
+      .single();
+
+    if (fetchErr || !request) {
+      return res.status(404).json({ error: 'Demande introuvable ou statut invalide' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .update({
+        twitch_id: twitch_id || null,
+        twitch_username: twitch_username || null,
+        twitch_display_name: twitch_display_name || null,
+        twitch_avatar: twitch_avatar || null,
+        twitch_followers: twitch_followers || 0,
+        twitch_broadcaster_type: twitch_broadcaster_type || null,
+        twitch_avg_viewers: twitch_avg_viewers || 0,
+        license_price: license_price != null ? license_price : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Request] Attach Twitch error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -375,7 +527,19 @@ app.post('/api/admin/requests/:id/confirm', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Le paiement doit etre confirme avant activation' });
     }
 
-    // 1. Upsert server
+    // If no guild_id yet, just activate the request (server selection comes later)
+    if (!request.guild_id) {
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from('server_requests')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+      if (updateErr) throw updateErr;
+      return res.json(updated);
+    }
+
+    // Guild exists: upsert server + auto-join + set server_id (existing flow)
     const now = new Date();
     const expiresAt = new Date(now);
     expiresAt.setMonth(expiresAt.getMonth() + (request.license_months || 1));
@@ -397,7 +561,7 @@ app.post('/api/admin/requests/:id/confirm', requireAdmin, async (req, res) => {
 
     if (serverErr) throw serverErr;
 
-    // 2. Auto-join the streamer in server_members
+    // Auto-join the streamer in server_members
     if (request.user_id) {
       await supabaseAdmin
         .from('server_members')
@@ -407,7 +571,7 @@ app.post('/api/admin/requests/:id/confirm', requireAdmin, async (req, res) => {
         );
     }
 
-    // 3. Update request status
+    // Update request status
     const { data: updated, error: updateErr } = await supabaseAdmin
       .from('server_requests')
       .update({
@@ -447,7 +611,7 @@ app.post('/api/admin/requests/:id/reject', requireAdmin, async (req, res) => {
       .single();
 
     if (error) throw error;
-    if (!data) return res.status(404).json({ error: 'Demande introuvable ou deja traitee' });
+    if (!data) return res.status(404).json({ error: 'Demande introuvable ou déjà traitée' });
 
     res.json(data);
   } catch (err) {
@@ -601,6 +765,109 @@ app.put('/api/my-subscription/server', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/my-subscription/select-server - Streamer selects guild after activation
+app.post('/api/my-subscription/select-server', requireAuth, async (req, res) => {
+  try {
+    const { guild_id, guild_name, guild_icon } = req.body;
+    if (!guild_id || !guild_name) {
+      return res.status(400).json({ error: 'guild_id et guild_name requis' });
+    }
+
+    // Find active request for this user
+    const { data: requests } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, server_id, license_price, license_label')
+      .eq('user_id', req.user.id)
+      .eq('status', 'active');
+
+    const active = (requests || [])[0];
+    if (!active) return res.status(404).json({ error: 'Aucune licence active' });
+    if (active.server_id) return res.status(409).json({ error: 'Un serveur est deja lie. Utilise "Modifier le serveur".' });
+
+    // Create/upsert the server
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    const { data: server, error: serverErr } = await supabaseAdmin
+      .from('servers')
+      .upsert({
+        guild_id,
+        guild_name,
+        guild_icon: guild_icon || null,
+        licensed: true,
+        license_label: active.license_label || 'Standard',
+        license_price: active.license_price || 29.99,
+        license_started_at: now.toISOString(),
+        license_expires_at: expiresAt.toISOString(),
+      }, { onConflict: 'guild_id' })
+      .select()
+      .single();
+
+    if (serverErr) throw serverErr;
+
+    // Link server to the request
+    await supabaseAdmin
+      .from('server_requests')
+      .update({
+        guild_id,
+        guild_name,
+        guild_icon: guild_icon || null,
+        server_id: server.id,
+        updated_at: now.toISOString(),
+      })
+      .eq('id', active.id);
+
+    // Auto-join the streamer
+    await supabaseAdmin
+      .from('server_members')
+      .upsert(
+        { server_id: server.id, user_id: req.user.id },
+        { onConflict: 'server_id,user_id' }
+      );
+
+    res.json(server);
+  } catch (err) {
+    console.error('[Subscription] Select server error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/my-subscription/visibility - Toggle server public/private
+app.put('/api/my-subscription/visibility', requireAuth, async (req, res) => {
+  try {
+    const { public: isPublic } = req.body;
+    if (typeof isPublic !== 'boolean') {
+      return res.status(400).json({ error: 'public (boolean) requis' });
+    }
+
+    // Find active request with server_id
+    const { data: requests } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, server_id')
+      .eq('user_id', req.user.id)
+      .eq('status', 'active');
+
+    const active = (requests || [])[0];
+    if (!active || !active.server_id) {
+      return res.status(404).json({ error: 'Aucun abonnement actif avec serveur' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('servers')
+      .update({ public: isPublic })
+      .eq('id', active.server_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Subscription] Visibility toggle error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // =====================================================
 // TWITCH OAUTH + DYNAMIC PRICING
 // =====================================================
@@ -628,6 +895,29 @@ function calculatePrice(followers, avgViewers, broadcasterType) {
   return Math.max(299, rounded);
 }
 
+// POST /api/twitch/auth-guest - Get Twitch OAuth URL (no auth required, for streamer onboarding)
+app.post('/api/twitch/auth-guest', async (req, res) => {
+  try {
+    if (!TWITCH_CLIENT_ID || !TWITCH_REDIRECT_URI) {
+      return res.status(503).json({ error: 'Twitch OAuth not configured' });
+    }
+
+    const state = 'guest';
+    const params = new URLSearchParams({
+      client_id: TWITCH_CLIENT_ID,
+      redirect_uri: TWITCH_REDIRECT_URI,
+      response_type: 'code',
+      scope: 'user:read:email moderator:read:followers',
+      state,
+    });
+
+    res.json({ url: `https://id.twitch.tv/oauth2/authorize?${params.toString()}` });
+  } catch (err) {
+    console.error('[Twitch] Guest auth error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/twitch/auth - Get Twitch OAuth URL (authenticated)
 app.post('/api/twitch/auth', requireAuth, async (req, res) => {
   try {
@@ -651,10 +941,10 @@ app.post('/api/twitch/auth', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Demande introuvable' });
     }
     if (request.user_id !== req.user.id) {
-      return res.status(403).json({ error: 'Acces refuse' });
+      return res.status(403).json({ error: 'Accès refusé' });
     }
     if (request.status !== 'pending') {
-      return res.status(400).json({ error: 'Cette demande ne peut plus etre modifiee' });
+      return res.status(400).json({ error: 'Cette demande ne peut plus être modifiée' });
     }
 
     // Build Twitch OAuth URL with state = request_id:user_id
@@ -682,21 +972,25 @@ app.get('/api/twitch/callback', async (req, res) => {
       return res.redirect('/?twitch_error=missing_params');
     }
 
-    // Parse state
-    const [requestId, userId] = state.split(':');
-    if (!requestId || !userId) {
-      return res.redirect('/?twitch_error=invalid_state');
-    }
+    const isGuest = state === 'guest';
 
-    // Verify request exists and belongs to user
-    const { data: request, error: reqErr } = await supabaseAdmin
-      .from('server_requests')
-      .select('id, user_id, status')
-      .eq('id', requestId)
-      .single();
+    // For authenticated flow: parse state and verify request
+    let requestId, userId;
+    if (!isGuest) {
+      [requestId, userId] = state.split(':');
+      if (!requestId || !userId) {
+        return res.redirect('/?twitch_error=invalid_state');
+      }
 
-    if (reqErr || !request || request.user_id !== userId) {
-      return res.redirect('/?twitch_error=invalid_request');
+      const { data: request, error: reqErr } = await supabaseAdmin
+        .from('server_requests')
+        .select('id, user_id, status')
+        .eq('id', requestId)
+        .single();
+
+      if (reqErr || !request || request.user_id !== userId) {
+        return res.redirect('/?twitch_error=invalid_request');
+      }
     }
 
     // Exchange code for access token
@@ -798,7 +1092,24 @@ app.get('/api/twitch/callback', async (req, res) => {
     // Calculate price
     const price = calculatePrice(followers, avgViewers, broadcasterType);
 
-    // Update the request with Twitch data
+    console.log(`[Twitch] ${twitchDisplayName} connected: ${followers} followers, ~${avgViewers} avg viewers, price=${price}`);
+
+    // Guest flow: redirect with Twitch data encoded in URL (no DB update)
+    if (isGuest) {
+      const twitchData = Buffer.from(JSON.stringify({
+        twitch_id: twitchId,
+        twitch_username: twitchUsername,
+        twitch_display_name: twitchDisplayName,
+        twitch_avatar: twitchAvatar,
+        twitch_followers: followers,
+        twitch_broadcaster_type: broadcasterType,
+        twitch_avg_viewers: avgViewers,
+        license_price: price,
+      })).toString('base64url');
+      return res.redirect('/?twitch_guest=' + twitchData);
+    }
+
+    // Authenticated flow: update the request in DB
     const { error: updateErr } = await supabaseAdmin
       .from('server_requests')
       .update({
@@ -819,11 +1130,491 @@ app.get('/api/twitch/callback', async (req, res) => {
       return res.redirect('/?twitch_error=update_failed');
     }
 
-    console.log(`[Twitch] ${twitchDisplayName} connected: ${followers} followers, ~${avgViewers} avg viewers, price=${price}`);
     res.redirect('/?twitch_done=1');
   } catch (err) {
     console.error('[Twitch] Callback error:', err.message);
     res.redirect('/?twitch_error=server_error');
+  }
+});
+
+// =====================================================
+// SERVER OWNER MIDDLEWARE
+// =====================================================
+async function requireServerOwner(req, res, next) {
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  const serverId = req.body?.server_id || req.query?.server_id || req.params?.server_id;
+  if (!serverId) {
+    return res.status(400).json({ error: 'server_id requis' });
+  }
+
+  try {
+    // Check if user has an active server_request for this server
+    const { data: activeReq } = await supabaseAdmin
+      .from('server_requests')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .eq('server_id', serverId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (activeReq) {
+      req.ownedServerId = serverId;
+      return next();
+    }
+
+    // Or check if user's discord_id matches server's owner_discord_id
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('discord_id')
+      .eq('id', req.user.id)
+      .single();
+
+    if (profile?.discord_id) {
+      const { data: server } = await supabaseAdmin
+        .from('servers')
+        .select('id, owner_discord_id')
+        .eq('id', serverId)
+        .single();
+
+      if (server && server.owner_discord_id === profile.discord_id) {
+        req.ownedServerId = serverId;
+        return next();
+      }
+    }
+
+    return res.status(403).json({ error: 'Tu n\'es pas owner de ce serveur' });
+  } catch (err) {
+    console.error('[Owner] Check error:', err.message);
+    return res.status(500).json({ error: 'Erreur verification owner' });
+  }
+}
+
+// =====================================================
+// TOURNAMENT ROUTES
+// =====================================================
+
+// GET /api/tournaments - List open/in_progress tournaments
+app.get('/api/tournaments', async (req, res) => {
+  try {
+    const { server_id } = req.query;
+    let query = supabaseAdmin
+      .from('tournaments')
+      .select('*, servers!tournaments_server_id_fkey(guild_name, guild_icon, guild_id), partner:servers!tournaments_partner_server_id_fkey(guild_name, guild_icon, guild_id)')
+      .in('status', ['open', 'in_progress', 'pending_partner'])
+      .order('starts_at', { ascending: true });
+
+    if (server_id) {
+      query = query.or(`server_id.eq.${server_id},partner_server_id.eq.${server_id}`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('[Tournaments] List error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/tournaments/:id - Tournament detail with participants
+app.get('/api/tournaments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: tournament, error } = await supabaseAdmin
+      .from('tournaments')
+      .select('*, servers!tournaments_server_id_fkey(guild_name, guild_icon, guild_id), partner:servers!tournaments_partner_server_id_fkey(guild_name, guild_icon, guild_id)')
+      .eq('id', id)
+      .single();
+
+    if (error || !tournament) {
+      return res.status(404).json({ error: 'Tournoi introuvable' });
+    }
+
+    // Fetch participants with profiles
+    const { data: participants } = await supabaseAdmin
+      .from('tournament_participants')
+      .select('*, profiles:user_id(discord_username, discord_avatar, riot_game_name, riot_tag_line, rank_tier, rank_division)')
+      .eq('tournament_id', id)
+      .order('registered_at', { ascending: true });
+
+    res.json({ ...tournament, participants: participants || [] });
+  } catch (err) {
+    console.error('[Tournaments] Detail error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournaments - Create tournament (owner only)
+app.post('/api/tournaments', requireAuth, async (req, res) => {
+  try {
+    const { title, description, format, server_id, max_participants, rank_min, rank_max, prize, rules, starts_at, ends_at, is_cross_community, target_server_id } = req.body;
+
+    if (!title || !server_id || !starts_at) {
+      return res.status(400).json({ error: 'title, server_id et starts_at requis' });
+    }
+
+    // Verify ownership
+    const { data: activeReq } = await supabaseAdmin
+      .from('server_requests')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .eq('server_id', server_id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    let isOwner = !!activeReq;
+    if (!isOwner) {
+      const { data: profile } = await supabaseAdmin.from('profiles').select('discord_id').eq('id', req.user.id).single();
+      if (profile?.discord_id) {
+        const { data: server } = await supabaseAdmin.from('servers').select('owner_discord_id').eq('id', server_id).single();
+        isOwner = server?.owner_discord_id === profile.discord_id;
+      }
+    }
+    if (!isOwner) return res.status(403).json({ error: 'Non autorise' });
+
+    const tournamentData = {
+      title: title.slice(0, 100),
+      description: description || '',
+      format: format || '5v5',
+      server_id,
+      created_by: req.user.id,
+      max_participants: max_participants || 32,
+      rank_min: rank_min || null,
+      rank_max: rank_max || null,
+      prize: prize || null,
+      rules: rules || '',
+      starts_at,
+      ends_at: ends_at || null,
+      is_cross_community: !!is_cross_community,
+      status: (is_cross_community && target_server_id) ? 'pending_partner' : 'open',
+    };
+
+    const { data: tournament, error } = await supabaseAdmin
+      .from('tournaments')
+      .insert(tournamentData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // If cross-community, create request
+    if (is_cross_community && target_server_id) {
+      await supabaseAdmin.from('tournament_requests').insert({
+        tournament_id: tournament.id,
+        from_server_id: server_id,
+        to_server_id: target_server_id,
+        requested_by: req.user.id,
+        status: 'pending',
+        message: `Invitation pour un tournoi cross-communaute: ${title}`,
+      });
+    }
+
+    res.json(tournament);
+  } catch (err) {
+    console.error('[Tournaments] Create error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/tournaments/:id - Update tournament (owner only)
+app.put('/api/tournaments/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch tournament to verify ownership
+    const { data: tournament } = await supabaseAdmin
+      .from('tournaments')
+      .select('server_id, created_by')
+      .eq('id', id)
+      .single();
+
+    if (!tournament) return res.status(404).json({ error: 'Tournoi introuvable' });
+    if (tournament.created_by !== req.user.id) return res.status(403).json({ error: 'Non autorise' });
+
+    const allowed = ['title', 'description', 'format', 'max_participants', 'rank_min', 'rank_max', 'prize', 'rules', 'starts_at', 'ends_at'];
+    const updates = { updated_at: new Date().toISOString() };
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('tournaments')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Tournaments] Update error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournaments/:id/cancel - Cancel tournament
+app.post('/api/tournaments/:id/cancel', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: tournament } = await supabaseAdmin.from('tournaments').select('created_by').eq('id', id).single();
+    if (!tournament) return res.status(404).json({ error: 'Tournoi introuvable' });
+    if (tournament.created_by !== req.user.id) return res.status(403).json({ error: 'Non autorise' });
+
+    const { data, error } = await supabaseAdmin
+      .from('tournaments')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .in('status', ['open', 'pending_partner'])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Tournaments] Cancel error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournaments/:id/start - Start tournament
+app.post('/api/tournaments/:id/start', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: tournament } = await supabaseAdmin.from('tournaments').select('created_by').eq('id', id).single();
+    if (!tournament) return res.status(404).json({ error: 'Tournoi introuvable' });
+    if (tournament.created_by !== req.user.id) return res.status(403).json({ error: 'Non autorise' });
+
+    const { data, error } = await supabaseAdmin
+      .from('tournaments')
+      .update({ status: 'in_progress', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('status', 'open')
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Tournaments] Start error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournaments/:id/complete - Complete tournament
+app.post('/api/tournaments/:id/complete', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: tournament } = await supabaseAdmin.from('tournaments').select('created_by').eq('id', id).single();
+    if (!tournament) return res.status(404).json({ error: 'Tournoi introuvable' });
+    if (tournament.created_by !== req.user.id) return res.status(403).json({ error: 'Non autorise' });
+
+    const { data, error } = await supabaseAdmin
+      .from('tournaments')
+      .update({ status: 'completed', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('status', 'in_progress')
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Tournaments] Complete error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Tournament Request Routes ---
+
+// GET /api/tournament-requests?server_id=X - Incoming requests for a server
+app.get('/api/tournament-requests', requireAuth, async (req, res) => {
+  try {
+    const { server_id } = req.query;
+    if (!server_id) return res.status(400).json({ error: 'server_id requis' });
+
+    const { data, error } = await supabaseAdmin
+      .from('tournament_requests')
+      .select('*, tournaments(title, format, starts_at, status, server_id, servers!tournaments_server_id_fkey(guild_name))')
+      .eq('to_server_id', server_id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('[TRequests] List error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournament-requests/:id/accept - Accept a cross-community request
+app.post('/api/tournament-requests/:id/accept', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: request, error: fetchErr } = await supabaseAdmin
+      .from('tournament_requests')
+      .select('*, tournaments(id, server_id, status)')
+      .eq('id', id)
+      .eq('status', 'pending')
+      .single();
+
+    if (fetchErr || !request) return res.status(404).json({ error: 'Demande introuvable' });
+
+    // Verify requester is owner of the target server
+    // (simplified: just check auth)
+
+    // Update request
+    await supabaseAdmin
+      .from('tournament_requests')
+      .update({ status: 'accepted', responded_at: new Date().toISOString() })
+      .eq('id', id);
+
+    // Update tournament: set partner_server_id and status to open
+    await supabaseAdmin
+      .from('tournaments')
+      .update({
+        partner_server_id: request.to_server_id,
+        status: 'open',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', request.tournament_id);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[TRequests] Accept error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tournament-requests/:id/decline - Decline a cross-community request
+app.post('/api/tournament-requests/:id/decline', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: request, error: fetchErr } = await supabaseAdmin
+      .from('tournament_requests')
+      .select('tournament_id')
+      .eq('id', id)
+      .eq('status', 'pending')
+      .single();
+
+    if (fetchErr || !request) return res.status(404).json({ error: 'Demande introuvable' });
+
+    // Update request
+    await supabaseAdmin
+      .from('tournament_requests')
+      .update({ status: 'declined', responded_at: new Date().toISOString() })
+      .eq('id', id);
+
+    // Tournament reverts to open without partner
+    await supabaseAdmin
+      .from('tournaments')
+      .update({
+        status: 'open',
+        partner_server_id: null,
+        is_cross_community: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', request.tournament_id)
+      .eq('status', 'pending_partner');
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[TRequests] Decline error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Tournament Participant Routes ---
+
+// POST /api/tournaments/:id/register - Register for a tournament
+app.post('/api/tournaments/:id/register', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch tournament
+    const { data: tournament, error: tErr } = await supabaseAdmin
+      .from('tournaments')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (tErr || !tournament) return res.status(404).json({ error: 'Tournoi introuvable' });
+    if (tournament.status !== 'open') return res.status(400).json({ error: 'Les inscriptions ne sont pas ouvertes' });
+    if (tournament.participant_count >= tournament.max_participants) return res.status(400).json({ error: 'Tournoi complet' });
+
+    // Check membership
+    const serverIds = [tournament.server_id, tournament.partner_server_id].filter(Boolean);
+    const { data: membership } = await supabaseAdmin
+      .from('server_members')
+      .select('server_id')
+      .eq('user_id', req.user.id)
+      .in('server_id', serverIds)
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) return res.status(403).json({ error: 'Tu dois etre membre de la communaute pour t\'inscrire' });
+
+    // Check rank bounds
+    if (tournament.rank_min || tournament.rank_max) {
+      const { data: profile } = await supabaseAdmin.from('profiles').select('rank_tier').eq('id', req.user.id).single();
+      if (profile?.rank_tier && profile.rank_tier !== 'UNRANKED') {
+        const rankOrder = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
+        const idx = rankOrder.indexOf(profile.rank_tier);
+        if (tournament.rank_min && idx < rankOrder.indexOf(tournament.rank_min)) {
+          return res.status(400).json({ error: `Rang minimum requis: ${tournament.rank_min}` });
+        }
+        if (tournament.rank_max && idx > rankOrder.indexOf(tournament.rank_max)) {
+          return res.status(400).json({ error: `Rang maximum: ${tournament.rank_max}` });
+        }
+      }
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('tournament_participants')
+      .insert({
+        tournament_id: id,
+        user_id: req.user.id,
+        server_id: membership.server_id,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.message.includes('duplicate') || error.code === '23505') {
+        return res.status(409).json({ error: 'Tu es deja inscrit' });
+      }
+      throw error;
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error('[Tournaments] Register error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/tournaments/:id/register - Unregister from a tournament
+app.delete('/api/tournaments/:id/register', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabaseAdmin
+      .from('tournament_participants')
+      .delete()
+      .eq('tournament_id', id)
+      .eq('user_id', req.user.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Tournaments] Unregister error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -850,7 +1641,7 @@ app.post('/api/verify-riot', async (req, res) => {
         return res.status(404).json({ error: `Joueur "${gameName}#${tagLine}" introuvable` });
       }
       if (accountRes.status === 403 || accountRes.status === 401) {
-        return res.status(403).json({ error: 'Cle API Riot expiree ou invalide' });
+        return res.status(403).json({ error: 'Clé API Riot expirée ou invalide' });
       }
       return res.status(500).json({ error: `Riot API erreur: ${accountRes.status}` });
     }

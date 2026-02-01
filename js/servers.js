@@ -11,6 +11,29 @@ export async function loadAllServers() {
   return data || [];
 }
 
+/** Fetch only public licensed servers (for browse and gate) */
+export async function loadPublicLicensedServers() {
+  // Try with public filter first; fall back to licensed-only if column doesn't exist yet
+  let { data, error } = await supabase
+    .from('servers')
+    .select('*')
+    .eq('licensed', true)
+    .eq('public', true)
+    .order('member_count', { ascending: false });
+
+  if (error && error.code === '42703') {
+    // Column "public" doesn't exist yet — fall back to licensed only
+    ({ data, error } = await supabase
+      .from('servers')
+      .select('*')
+      .eq('licensed', true)
+      .order('member_count', { ascending: false }));
+  }
+
+  if (error) throw error;
+  return data || [];
+}
+
 /** Fetch members of a server with their profile data */
 export async function loadServerMembers(serverId) {
   const { data, error } = await supabase

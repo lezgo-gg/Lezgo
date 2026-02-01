@@ -170,7 +170,7 @@ async function showPlayerProfile(puuid, riotName, riotTag, preloadedAnalytics) {
   const progressLabel = document.getElementById('progress-label');
   progressDiv.classList.remove('hidden');
   progressFill.style.width = '5%';
-  progressLabel.textContent = 'Recuperation des donnees...';
+  progressLabel.textContent = 'Récupération des données...';
 
   const setProgress = (pct, label) => {
     progressFill.style.width = `${pct}%`;
@@ -870,13 +870,13 @@ async function renderLPChart(analytics, profile) {
   const ranked = (analytics.matchHistory || []).filter(m => m.win !== undefined);
 
   if (ranked.length < 2) {
-    container.innerHTML = '<p class="empty-note">Pas assez de donnees pour le graphique</p>';
+    container.innerHTML = '<p class="empty-note">Pas assez de données pour le graphique</p>';
     return;
   }
 
   const points = estimateLPProgression(ranked, profile.rank_tier, profile.rank_division, profile.lp || 0);
   if (points.length < 2) {
-    container.innerHTML = '<p class="empty-note">Pas assez de donnees</p>';
+    container.innerHTML = '<p class="empty-note">Pas assez de données</p>';
     return;
   }
 
@@ -1646,7 +1646,7 @@ let analysisInProgress = false;
 async function triggerAnalysis(puuid, userId) {
   if (analysisInProgress) return;
   if (!puuid) {
-    window.showToast('PUUID introuvable. Verifie ton Riot ID d\'abord.', 'error');
+    window.showToast('PUUID introuvable. Vérifie ton Riot ID d\'abord.', 'error');
     return;
   }
 
@@ -1689,7 +1689,7 @@ async function triggerAnalysis(puuid, userId) {
     currentProfile.profile_icon_id = analytics.profileIconId;
     currentProfile.last_analyzed_at = new Date().toISOString();
 
-    window.showToast('Analyse terminee !', 'success');
+    window.showToast('Analyse terminée !', 'success');
 
     // Re-render without re-triggering auto-analysis (flag prevents re-entry)
     renderDashboard(currentProfile);

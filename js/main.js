@@ -1,10 +1,9 @@
 import { supabase } from './supabase.js';
 import { initAuthModal, openAuthModal, getDiscordInfo, logout } from './auth.js';
 import { initRiotVerification } from './riot.js';
-import { loadProfile, fillProfileForm, resetProfileForm, setDiscordInfo, initProfileForm, loadStreamerSection } from './profile.js';
+import { loadProfile, fillProfileForm, resetProfileForm, setDiscordInfo, initProfileForm } from './profile.js';
 import { initBrowse, loadServers, loadServerDetail, getPlayerCount } from './browse.js';
 import { initDashboard, updateDashboardProfile, restoreOwnProfile, isViewingOtherPlayer } from './dashboard.js';
-import { joinServerByGuildId } from './servers.js';
 import { initOnboarding } from './onboarding.js';
 import { initAdmin } from './admin.js';
 
@@ -28,6 +27,7 @@ window.showToast = function (message, type = 'success') {
 let currentUser = null;
 let currentProfileData = null;
 let isAdmin = false;
+let streamerTabLoaded = false;
 
 // --- View management ---
 function showView(viewId) {
@@ -45,12 +45,20 @@ function showView(viewId) {
 // --- Profile tabs ---
 function initProfileTabs() {
   document.querySelectorAll('.profile-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', async () => {
       const target = tab.dataset.tab;
       document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(target)?.classList.add('active');
+
+      // Lazy-load streamer tab
+      if (target === 'tab-streamer' && !streamerTabLoaded && currentUser) {
+        streamerTabLoaded = true;
+        const discordInfo = getDiscordInfo(currentUser);
+        const { initStreamerSection } = await import('./streamer-request.js');
+        await initStreamerSection(currentUser, discordInfo);
+      }
     });
   });
 }
@@ -100,11 +108,11 @@ function updateNavbar(user, showAdminBtn = false) {
     actions.innerHTML = `
       <div class="navbar-user">
         ${adminBtnHtml}
-        <button class="btn btn-ghost" id="nav-browse">Communautes</button>
+        <button class="btn btn-ghost" id="nav-browse">Communautés</button>
         <button class="btn btn-ghost" id="nav-profile">Mon Profil</button>
         <button class="btn btn-ghost" id="nav-logout">
           ${avatarHtml}
-          Deconnexion
+          Déconnexion
         </button>
       </div>
     `;
@@ -154,44 +162,66 @@ async function handleAuthChange(session) {
     isAdmin = discordInfo?.discord_id === ADMIN_DISCORD_ID;
     updateNavbar(session.user, isAdmin);
 
-    // --- Admin: full access, skip gate ---
-    if (isAdmin) {
+    // --- Detect OAuth returns for streamer tab ---
+    const urlParams = new URLSearchParams(location.search);
+    const hasStreamerOAuth = urlParams.has('guilds') || urlParams.has('guilds_error') || urlParams.has('twitch_done') || urlParams.has('twitch_error');
+
+    // --- Admin: full access, skip gate (unless ?test-gate or returning from OAuth) ---
+    const testGate = urlParams.has('test-gate');
+    if (isAdmin && !testGate && !hasStreamerOAuth) {
       await handleNormalAccess(session, profile, discordInfo);
       return;
     }
 
-    // --- Check for pending server join (from ?server= URL) ---
-    const pendingGuildId = sessionStorage.getItem('pendingServer');
-    if (pendingGuildId) {
-      sessionStorage.removeItem('pendingServer');
-
-      // Auto-join the server
-      try {
-        await joinServerByGuildId(pendingGuildId, session.user.id);
-      } catch {
-        // may already be a member, ignore
-      }
-
-      // Check if this server is licensed (grants access)
-      const hasAccess = await hasLicensedAccess(session.user.id);
+    // If returning from streamer OAuth, go to normal access → streamer tab
+    if (hasStreamerOAuth) {
+      // Check if admin or has access - if so, go to profile > streamer tab
+      const hasAccess = isAdmin || await hasLicensedAccess(session.user.id);
       if (hasAccess) {
-        await handleNormalAccess(session, profile, discordInfo, pendingGuildId);
-      } else {
-        showView('view-gate');
-        initGateLogout();
-        const { initGateRequestStatus } = await import('./streamer-request.js');
-        await initGateRequestStatus(session.user, discordInfo);
+        await handleNormalAccess(session, profile, discordInfo, true);
+        return;
       }
+      // No access yet — still need gate, but streamer OAuth means they're in the flow
+      // Show gate but also init streamer section in profile for when they get access
+    }
+
+    // --- Check for pending access token (from ?t= URL) ---
+    const pendingToken = sessionStorage.getItem('lezgo_access_token');
+    if (pendingToken) {
+      sessionStorage.removeItem('lezgo_access_token');
+      const { data: tokenServer } = await supabase
+        .from('servers')
+        .select('id, guild_id')
+        .eq('access_token', pendingToken)
+        .eq('licensed', true)
+        .single();
+
+      if (tokenServer) {
+        await supabase.from('server_members').upsert(
+          { server_id: tokenServer.id, user_id: session.user.id },
+          { onConflict: 'server_id,user_id' }
+        );
+        await handleNormalAccess(session, profile, discordInfo);
+        return;
+      }
+      // Token invalide → continuer le flow normal (gate)
+    }
+
+    // --- Streamer flow: skip gate if returning from streamer onboarding ---
+    const pendingStreamerAction = sessionStorage.getItem('postLoginAction');
+    if (pendingStreamerAction === 'streamer-tab') {
+      await handleNormalAccess(session, profile, discordInfo, true);
       return;
     }
 
     // --- License gate check ---
-    const hasAccess = await hasLicensedAccess(session.user.id);
+    const hasAccess = testGate ? false : await hasLicensedAccess(session.user.id);
     if (!hasAccess) {
       showView('view-gate');
       initGateLogout();
-      const { initGateRequestStatus } = await import('./streamer-request.js');
-      await initGateRequestStatus(session.user, discordInfo);
+      const { initGate } = await import('./gate.js');
+      await initGate(session.user.id);
+      if (testGate) history.replaceState({}, '', location.pathname);
       return;
     }
 
@@ -202,25 +232,49 @@ async function handleAuthChange(session) {
     currentUser = null;
     currentProfileData = null;
     isAdmin = false;
+    streamerTabLoaded = false;
     updateNavbar(null);
     resetProfileForm();
 
-    // If pending server and not logged in, prompt auth
-    if (sessionStorage.getItem('pendingServer')) {
-      openAuthModal();
+    // Check for guest Twitch callback (unauthenticated streamer onboarding)
+    const urlParams = new URLSearchParams(location.search);
+    const twitchGuest = urlParams.get('twitch_guest');
+    if (twitchGuest) {
+      history.replaceState({}, '', location.pathname);
+      try {
+        const twitchData = JSON.parse(atob(twitchGuest.replace(/-/g, '+').replace(/_/g, '/')));
+        sessionStorage.setItem('lezgo_twitch_guest', JSON.stringify(twitchData));
+      } catch (e) {
+        console.error('[Main] Failed to parse twitch_guest data:', e);
+      }
+    }
+
+    // If we have guest Twitch data, show the streamer pricing flow
+    const guestTwitchData = sessionStorage.getItem('lezgo_twitch_guest');
+    if (guestTwitchData) {
+      showView('view-profile');
+      showProfileTab('tab-streamer');
+      const dashHeader = document.getElementById('dashboard-header');
+      const profileTabs = document.querySelector('.profile-tabs');
+      if (dashHeader) dashHeader.classList.add('hidden');
+      if (profileTabs) profileTabs.classList.add('hidden');
+      const { showGuestPricing } = await import('./streamer-request.js');
+      if (showGuestPricing) showGuestPricing(JSON.parse(guestTwitchData));
       return;
     }
 
+    // Check if a token is in session to activate login
+    const hasToken = !!sessionStorage.getItem('lezgo_access_token');
+    updateLandingForToken(hasToken);
     showView('view-landing');
   }
 }
 
-async function handleNormalAccess(session, profile, discordInfo, pendingGuildId) {
-  // --- Onboarding check: no profile or no riot_puuid ---
-  if (!profile || !profile.riot_puuid) {
+async function handleNormalAccess(session, profile, discordInfo, goToStreamerTab) {
+  // --- Onboarding check: no profile or no riot_puuid (skip for streamer flow) ---
+  if ((!profile || !profile.riot_puuid) && !goToStreamerTab) {
     showView('view-onboarding');
     initOnboarding(session.user.id, discordInfo, async () => {
-      // Onboarding complete - reload profile and proceed
       const updatedProfile = await loadProfile(session.user.id);
       currentProfileData = updatedProfile;
       fillProfileForm(updatedProfile);
@@ -243,6 +297,13 @@ async function handleNormalAccess(session, profile, discordInfo, pendingGuildId)
       }
       showView('view-browse');
       initBrowse(session.user.id, updatedProfile);
+
+      // Guide tour after onboarding
+      setTimeout(async () => {
+        const { startTour, isTourDone } = await import('./guide.js');
+        if (!isTourDone()) startTour();
+        window.startTour = startTour;
+      }, 600);
     });
     return;
   }
@@ -262,18 +323,29 @@ async function handleNormalAccess(session, profile, discordInfo, pendingGuildId)
 
   if (profile) {
     fillProfileForm(profile);
-    loadStreamerSection();
     initDashboard(session.user.id, profile, () => {
       showView('view-browse');
       initBrowse(session.user.id, profile);
     });
   }
 
-  // --- If pending server, go to server detail ---
-  if (pendingGuildId) {
-    showView('view-browse');
-    initBrowse(session.user.id, profile);
-    setTimeout(() => loadServerDetail(pendingGuildId), 100);
+  // --- Detect postLoginAction from sessionStorage ---
+  const postAction = sessionStorage.getItem('postLoginAction');
+  if (postAction === 'streamer-tab') {
+    sessionStorage.removeItem('postLoginAction');
+    goToStreamerTab = true;
+  }
+
+  // --- If returning from streamer OAuth or CTA, go to streamer tab ---
+  if (goToStreamerTab) {
+    showView('view-profile');
+    showProfileTab('tab-streamer');
+    // Trigger lazy-load
+    if (!streamerTabLoaded && currentUser) {
+      streamerTabLoaded = true;
+      const { initStreamerSection } = await import('./streamer-request.js');
+      await initStreamerSection(currentUser, discordInfo);
+    }
     return;
   }
 
@@ -290,6 +362,30 @@ async function handleNormalAccess(session, profile, discordInfo, pendingGuildId)
     showView('view-profile');
     showProfileTab('tab-form');
   }
+
+  // Expose startTour globally for replay via console
+  import('./guide.js').then(({ startTour }) => {
+    window.startTour = startTour;
+  });
+}
+
+function updateLandingForToken(hasToken) {
+  const heroJoin = document.getElementById('hero-join');
+  const heroBrowse = document.getElementById('hero-browse');
+  const banner = document.getElementById('token-gate-banner');
+  const navbarLogin = document.getElementById('btn-login');
+
+  if (hasToken) {
+    if (heroJoin) heroJoin.classList.remove('hidden');
+    if (heroBrowse) heroBrowse.classList.remove('hidden');
+    if (banner) banner.classList.add('hidden');
+    if (navbarLogin) navbarLogin.classList.remove('hidden');
+  } else {
+    if (heroJoin) heroJoin.classList.add('hidden');
+    if (heroBrowse) heroBrowse.classList.add('hidden');
+    if (banner) banner.classList.remove('hidden');
+    if (navbarLogin) navbarLogin.classList.add('hidden');
+  }
 }
 
 function initGateLogout() {
@@ -304,11 +400,11 @@ function initGateLogout() {
 
 // --- Main init ---
 async function init() {
-  // Detect ?server=GUILD_ID in URL
+  // Token d'acces depuis le bot Discord
   const params = new URLSearchParams(location.search);
-  const pendingServer = params.get('server');
-  if (pendingServer) {
-    sessionStorage.setItem('pendingServer', pendingServer);
+  const accessToken = params.get('t');
+  if (accessToken) {
+    sessionStorage.setItem('lezgo_access_token', accessToken);
     history.replaceState({}, '', location.pathname);
   }
 
@@ -321,6 +417,59 @@ async function init() {
   document.getElementById('hero-browse').addEventListener('click', () => {
     showView('view-browse');
     initBrowse(null, null);
+  });
+
+  // Hero streamer CTA
+  const streamerCta = document.getElementById('hero-streamer-cta');
+  if (streamerCta) {
+    streamerCta.addEventListener('click', () => {
+      if (currentUser) {
+        // Go to profile > streamer tab
+        showView('view-profile');
+        showProfileTab('tab-streamer');
+        // Trigger lazy-load
+        if (!streamerTabLoaded) {
+          streamerTabLoaded = true;
+          const discordInfo = getDiscordInfo(currentUser);
+          import('./streamer-request.js').then(({ initStreamerSection }) => {
+            initStreamerSection(currentUser, discordInfo);
+          });
+        }
+      } else {
+        // Show streamer tab directly without login
+        showView('view-profile');
+        showProfileTab('tab-streamer');
+        // Hide profile header and tabs for unauthenticated streamer view
+        const dashHeader = document.getElementById('dashboard-header');
+        const profileTabs = document.querySelector('.profile-tabs');
+        if (dashHeader) dashHeader.classList.add('hidden');
+        if (profileTabs) profileTabs.classList.add('hidden');
+        // Init the guest streamer flow
+        import('./streamer-request.js').then(({ initGuestStreamerFlow }) => {
+          if (initGuestStreamerFlow) initGuestStreamerFlow();
+        });
+      }
+    });
+  }
+
+  // Demo video play/pause
+  document.querySelectorAll('.pricing-demo-video').forEach(container => {
+    const video = container.querySelector('video');
+    const playBtn = container.querySelector('.pricing-demo-play');
+    if (!video || !playBtn) return;
+    playBtn.addEventListener('click', () => {
+      if (video.paused) {
+        video.play();
+        container.classList.add('playing');
+      } else {
+        video.pause();
+        container.classList.remove('playing');
+      }
+    });
+    video.addEventListener('click', () => {
+      video.pause();
+      container.classList.remove('playing');
+    });
   });
 
   // Logo click

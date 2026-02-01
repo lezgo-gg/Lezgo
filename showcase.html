@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>Lezgo.gg — Features Showcase</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg-primary: #060a13;
+    --bg-secondary: #0c1220;
+    --bg-card: rgba(17, 25, 44, 0.85);
+    --bg-card-solid: #111927;
+    --bg-input: #0a1020;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --text-primary: #e8e4dc;
+    --text-secondary: #8c8a84;
+    --text-muted: #5c5a54;
+    --gold: #c89b3c;
+    --gold-light: #f0e6d2;
+    --gold-glow: rgba(200, 155, 60, 0.25);
+    --green: #2ecc71;
+    --blue: #5865f2;
+    --red: #e74c3c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 60px 80px;
+    min-width: 1200px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 60px;
+  }
+
+  /* ─── Feature card ─── */
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 48px;
+    min-height: 380px;
+  }
+  .feature-panel {
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .feature-panel-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .feature-panel-label.gold { color: var(--gold); }
+  .feature-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .feature-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* ─── Slash separator ─── */
+  .slash-sep {
+    width: 80px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .slash-sep::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    bottom: -20px;
+    left: 50%;
+    width: 3px;
+    background: linear-gradient(180deg, transparent 0%, var(--gold) 20%, var(--gold) 80%, transparent 100%);
+    transform: translateX(-50%) rotate(12deg);
+    transform-origin: center;
+  }
+  .slash-sep::after {
+    content: '/';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--gold);
+    background: var(--bg-card);
+    padding: 8px 4px;
+    z-index: 1;
+  }
+
+  /* ─── Mini UI mockups ─── */
+  .mock { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+  .mock-form { display: flex; flex-direction: column; gap: 10px; }
+  .mock-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-hover);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-family: inherit;
+  }
+  .mock-input.filled { color: var(--text-secondary); }
+  .mock-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border-hover);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-family: inherit;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238c8a84' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .mock-row { display: flex; gap: 10px; }
+  .mock-row > * { flex: 1; }
+
+  .mock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    cursor: default;
+    width: fit-content;
+  }
+  .mock-btn.gold {
+    background: linear-gradient(135deg, var(--gold), #ddb04a);
+    color: #1a1a2e;
+  }
+  .mock-btn.outline {
+    background: transparent;
+    border: 1px solid var(--border-hover);
+    color: var(--text-primary);
+  }
+  .mock-btn.green {
+    background: var(--green);
+    color: #fff;
+  }
+  .mock-btn.blue {
+    background: var(--blue);
+    color: #fff;
+  }
+  .mock-btn.sm {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+  }
+
+  .mock-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+  .mock-toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--gold);
+    border-radius: 11px;
+    position: relative;
+  }
+  .mock-toggle::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+  }
+
+  /* ─── Result mockups ─── */
+  .mock-card {
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border-hover);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .mock-card + .mock-card { margin-top: 10px; }
+  .mock-card.glow {
+    border-color: rgba(200, 155, 60, 0.3);
+    box-shadow: 0 0 20px var(--gold-glow);
+  }
+
+  .mock-user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .mock-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a2040, #2a3060);
+    border: 2px solid var(--border-hover);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .mock-avatar.sm { width: 28px; height: 28px; }
+  .mock-avatar.gold-ring { border-color: var(--gold); }
+
+  .mock-name { font-weight: 600; font-size: 0.85rem; }
+  .mock-tag { color: var(--text-muted); font-size: 0.75rem; }
+
+  .mock-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mock-badge.rank-gold { background: rgba(255, 183, 0, 0.15); color: #ffb700; }
+  .mock-badge.rank-plat { background: rgba(0, 200, 180, 0.15); color: #00c8b4; }
+  .mock-badge.rank-diamond { background: rgba(100, 149, 237, 0.15); color: #6495ed; }
+  .mock-badge.rank-master { background: rgba(160, 100, 220, 0.15); color: #a064dc; }
+  .mock-badge.rank-chall { background: rgba(255, 80, 80, 0.15); color: #ff5050; }
+  .mock-badge.role { background: rgba(200, 155, 60, 0.12); color: var(--gold); }
+  .mock-badge.status-open { background: rgba(46, 204, 113, 0.15); color: var(--green); }
+  .mock-badge.status-progress { background: rgba(200, 155, 60, 0.15); color: var(--gold); }
+  .mock-badge.format { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+
+  .mock-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mock-note { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+  .mock-timer { font-size: 0.72rem; color: var(--text-muted); }
+  .mock-actions { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+
+  .mock-server-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1a2040, #2a3060);
+    border: 1px solid var(--border-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* Stats grid */
+  .mock-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .mock-stat {
+    text-align: center;
+    padding: 10px 6px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .mock-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold-light);
+  }
+  .mock-stat-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* Champion mini cards */
+  .mock-champ-row { display: flex; gap: 8px; margin-top: 10px; }
+  .mock-champ {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1a2840, #203050);
+    border: 1px solid var(--border-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* Playstyle bars */
+  .mock-bar-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .mock-bar-label { font-size: 0.7rem; color: var(--text-secondary); width: 70px; text-align: right; flex-shrink: 0; }
+  .mock-bar-track { flex: 1; height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+  .mock-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+
+  /* Server grid mini */
+  .mock-server-grid { display: flex; gap: 10px; }
+  .mock-server-card {
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border-hover);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+  .mock-server-card:hover { border-color: rgba(200,155,60,0.3); }
+
+  .mock-server-mini-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1a2040, #2a3060);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .mock-server-card-name { font-size: 0.78rem; font-weight: 600; }
+
+  /* Cross badge */
+  .cross-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .cross-x { font-size: 1rem; opacity: 0.6; }
+
+  /* Request card */
+  .mock-request-card {
+    background: var(--bg-card-solid);
+    border: 1px solid rgba(200, 155, 60, 0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .mock-request-from {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .mock-request-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+  .mock-request-msg { font-size: 0.78rem; color: var(--text-secondary); font-style: italic; margin: 8px 0; }
+
+  /* Participants list mini */
+  .mock-participant-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+  }
+  .mock-participant-row + .mock-participant-row {
+    border-top: 1px solid var(--border);
+  }
+  .mock-participant-name { font-size: 0.78rem; font-weight: 500; }
+  .mock-participant-rank { font-size: 0.68rem; }
+</style>
+</head>
+<body>
+
+<h1>Lezgo.gg</h1>
+<p class="subtitle">Ce que ta licence debloque pour ta communaute</p>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FEATURE 1 : COMMUNAUTÉ -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="feature">
+  <div class="feature-panel">
+    <span class="feature-panel-label">Tu configures</span>
+    <div class="feature-title">Ta communaute sur Lezgo</div>
+    <div class="feature-desc">Selectionne ton serveur Discord, choisis la visibilite, et ta communaute est en ligne.</div>
+    <div class="mock">
+      <div class="mock-form">
+        <div class="mock-card" style="display:flex;align-items:center;gap:14px;">
+          <div class="mock-server-icon">R</div>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">Rift Academy</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">guild_id: 100000000000000001</div>
+          </div>
+          <span style="margin-left:auto;color:var(--green);font-size:0.75rem;font-weight:600;">&#10003; Selectionne</span>
+        </div>
+        <div class="mock-toggle-row">
+          <div class="mock-toggle"></div>
+          Visible publiquement
+        </div>
+        <div class="mock-btn gold" style="margin-top:6px;">Activer la communaute</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slash-sep"></div>
+
+  <div class="feature-panel">
+    <span class="feature-panel-label gold">Tes joueurs voient</span>
+    <div class="feature-title">Leur serveur dans le hub</div>
+    <div class="feature-desc">Ta communaute apparait dans la section Communautes, accessible a tous.</div>
+    <div class="mock">
+      <div class="mock-server-grid">
+        <div class="mock-server-card" style="border-color:rgba(200,155,60,0.35);box-shadow:0 0 15px var(--gold-glow);">
+          <div class="mock-server-mini-icon">R</div>
+          <div class="mock-server-card-name">Rift Academy</div>
+        </div>
+        <div class="mock-server-card">
+          <div class="mock-server-mini-icon">N</div>
+          <div class="mock-server-card-name">Nexus Legends</div>
+        </div>
+      </div>
+      <div class="mock-server-grid" style="margin-top:10px;">
+        <div class="mock-server-card">
+          <div class="mock-server-mini-icon">B</div>
+          <div class="mock-server-card-name">Baron Nashor Club</div>
+        </div>
+        <div class="mock-server-card">
+          <div class="mock-server-mini-icon">S</div>
+          <div class="mock-server-card-name">Summoner School</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FEATURE 2 : LFG -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="feature">
+  <div class="feature-panel">
+    <span class="feature-panel-label">Le joueur poste</span>
+    <div class="feature-title">Une annonce LFG</div>
+    <div class="feature-desc">Tes membres cherchent un groupe en 10 secondes : role, note, et c'est parti.</div>
+    <div class="mock">
+      <div class="mock-form">
+        <div class="mock-select">Role recherche : MID</div>
+        <div class="mock-input filled">Cherche duo ranked tryhard, vocal obligatoire</div>
+        <div class="mock-row">
+          <div class="mock-btn gold">Publier l'annonce</div>
+          <div class="mock-btn outline">Annuler</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slash-sep"></div>
+
+  <div class="feature-panel">
+    <span class="feature-panel-label gold">La communaute voit</span>
+    <div class="feature-title">Les annonces en temps reel</div>
+    <div class="feature-desc">Rang verifie, role, note, timer — tout ce qu'il faut pour trouver le bon mate.</div>
+    <div class="mock">
+      <div class="mock-card">
+        <div class="mock-user-row">
+          <div class="mock-avatar gold-ring">K4</div>
+          <div>
+            <span class="mock-name">K4ssadin</span><span class="mock-tag">#EUW</span>
+            <div class="mock-meta">
+              <span class="mock-badge rank-diamond">Diamond III</span>
+              <span class="mock-badge role">MID</span>
+            </div>
+          </div>
+        </div>
+        <div class="mock-note">Cherche duo ranked tryhard, vocal obligatoire</div>
+        <div class="mock-actions">
+          <span class="mock-timer">Expire dans 2h14</span>
+          <div class="mock-btn blue sm" style="margin-left:auto;">Discord</div>
+        </div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-user-row">
+          <div class="mock-avatar">VS</div>
+          <div>
+            <span class="mock-name">Vayne Spotting</span><span class="mock-tag">#BOT</span>
+            <div class="mock-meta">
+              <span class="mock-badge rank-plat">Platinum III</span>
+              <span class="mock-badge role">ADC</span>
+            </div>
+          </div>
+        </div>
+        <div class="mock-note">Duo bot lane, je suis ADC main</div>
+        <div class="mock-actions">
+          <span class="mock-timer">Expire dans 1h03</span>
+          <div class="mock-btn blue sm" style="margin-left:auto;">Discord</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FEATURE 3 : TOURNOIS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="feature">
+  <div class="feature-panel">
+    <span class="feature-panel-label">Tu crees</span>
+    <div class="feature-title">Un tournoi en 30 secondes</div>
+    <div class="feature-desc">Format, rang requis, recompense, regles — tout est configurable. Active le cross-communaute pour inviter d'autres serveurs.</div>
+    <div class="mock">
+      <div class="mock-form">
+        <div class="mock-input filled">Rift Academy Weekly</div>
+        <div class="mock-row">
+          <div class="mock-select">Format : 5v5</div>
+          <div class="mock-input filled">32 joueurs max</div>
+        </div>
+        <div class="mock-row">
+          <div class="mock-select">Rang min : Silver</div>
+          <div class="mock-select">Rang max : Diamond</div>
+        </div>
+        <div class="mock-input filled">20 EUR de RP</div>
+        <div class="mock-toggle-row">
+          <div class="mock-toggle"></div>
+          Tournoi cross-communaute
+        </div>
+        <div class="mock-btn gold" style="margin-top:4px;">Creer le tournoi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slash-sep"></div>
+
+  <div class="feature-panel">
+    <span class="feature-panel-label gold">Le resultat</span>
+    <div class="feature-title">Un tournoi pret a jouer</div>
+    <div class="feature-desc">Inscriptions automatiques, verification de rang, liste de participants en temps reel.</div>
+    <div class="mock">
+      <div class="mock-card glow">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Rift Academy</span>
+          <span class="mock-badge status-open">Inscriptions</span>
+        </div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">Rift Academy Weekly</div>
+        <div class="mock-meta">
+          <span class="mock-badge format">5v5</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">4 fev.</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">14/32</span>
+        </div>
+        <div style="margin-top:8px;font-size:0.78rem;color:var(--gold);">20 EUR de RP</div>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:0.78rem;font-weight:600;margin-bottom:8px;color:var(--gold);">PARTICIPANTS</div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">SH</div>
+          <span class="mock-participant-name">Shaker#9999</span>
+          <span class="mock-badge rank-chall" style="margin-left:auto;">Challenger</span>
+        </div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">DE</div>
+          <span class="mock-participant-name">Draven Enjoyer#FR</span>
+          <span class="mock-badge rank-diamond" style="margin-left:auto;">Diamond I</span>
+        </div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">SM</div>
+          <span class="mock-participant-name">Syndra Mains#EUW</span>
+          <span class="mock-badge rank-plat" style="margin-left:auto;">Platinum II</span>
+        </div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">FD</div>
+          <span class="mock-participant-name">FlashOnD#EUW</span>
+          <span class="mock-badge rank-gold" style="margin-left:auto;">Gold I</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FEATURE 4 : ANALYTICS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="feature">
+  <div class="feature-panel">
+    <span class="feature-panel-label">Le joueur lance</span>
+    <div class="feature-title">Son analyse de gameplay</div>
+    <div class="feature-desc">Un clic, et l'app analyse ses 10 dernieres ranked via l'API Riot pour generer un profil complet.</div>
+    <div class="mock">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0;">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a2040,#2a3060);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c89b3c" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <div class="mock-btn gold" style="font-size:0.9rem;padding:12px 28px;">Lancer l'analyse</div>
+        <div style="width:100%;height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:4px;">
+          <div style="width:65%;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">Analyse en cours... 6/10 matchs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slash-sep"></div>
+
+  <div class="feature-panel">
+    <span class="feature-panel-label gold">Il obtient</span>
+    <div class="feature-title">Un dashboard complet</div>
+    <div class="feature-desc">Stats, champion pool, playstyle, forces/faiblesses — tout pour progresser.</div>
+    <div class="mock">
+      <div class="mock-stats-grid">
+        <div class="mock-stat">
+          <div class="mock-stat-value">3.42</div>
+          <div class="mock-stat-label">KDA</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-value">54.2%</div>
+          <div class="mock-stat-label">Winrate</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-value">7.1</div>
+          <div class="mock-stat-label">CS/min</div>
+        </div>
+        <div class="mock-stat">
+          <div class="mock-stat-value">62%</div>
+          <div class="mock-stat-label">Kill Part.</div>
+        </div>
+      </div>
+
+      <div class="mock-champ-row">
+        <div class="mock-champ">Ahri</div>
+        <div class="mock-champ">Syndra</div>
+        <div class="mock-champ">Orianna</div>
+        <div class="mock-champ">Fizz</div>
+        <div class="mock-champ">Akali</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Playstyle</div>
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">Agressif</div>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:78%"></div></div>
+        </div>
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">Farming</div>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+        </div>
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">Vision</div>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:52%"></div></div>
+        </div>
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">Teamplay</div>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:67%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FEATURE 5 : CROSS-COMMUNAUTÉ -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="feature">
+  <div class="feature-panel">
+    <span class="feature-panel-label">Tu recois</span>
+    <div class="feature-title">Une demande cross-communaute</div>
+    <div class="feature-desc">Un autre streamer t'invite pour un tournoi commun. Accepte, et les deux communautes fusionnent pour l'event.</div>
+    <div class="mock">
+      <div class="mock-request-card">
+        <div class="mock-request-from">Demande de <span style="color:var(--gold);">La Faille</span></div>
+        <div class="mock-request-title">La Faille x Rift Academy 2v2</div>
+        <div class="mock-meta">
+          <span class="mock-badge format">2v2</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">15 fev.</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">Silver - Platinum</span>
+        </div>
+        <div class="mock-request-msg">"2v2 entre nos communautes, ca vous tente ?"</div>
+        <div class="mock-actions">
+          <div class="mock-btn green sm">Accepter</div>
+          <div class="mock-btn outline sm">Refuser</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slash-sep"></div>
+
+  <div class="feature-panel">
+    <span class="feature-panel-label gold">Le tournoi devient</span>
+    <div class="feature-title">Un event a deux communautes</div>
+    <div class="feature-desc">Les joueurs des deux serveurs peuvent s'inscrire. Double la visibilite, double le fun.</div>
+    <div class="mock">
+      <div class="mock-card glow">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="cross-badge">
+            <span>La Faille</span>
+            <span class="cross-x">&times;</span>
+            <span>Rift Academy</span>
+          </div>
+          <span class="mock-badge status-open">Inscriptions</span>
+        </div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">La Faille x Rift Academy 2v2</div>
+        <div class="mock-meta">
+          <span class="mock-badge format">2v2</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">15 fev.</span>
+          <span style="font-size:0.78rem;color:var(--text-secondary);">11/24</span>
+        </div>
+        <div style="margin-top:8px;font-size:0.78rem;color:var(--gold);">30 EUR de RP</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm" style="border-color:var(--gold);">VC</div>
+          <span class="mock-participant-name">Volcrest#1337</span>
+          <span class="mock-badge rank-master" style="margin-left:auto;">Master</span>
+        </div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">LG</div>
+          <span class="mock-participant-name">Le Grull#0033</span>
+          <span class="mock-badge rank-plat" style="margin-left:auto;">Platinum I</span>
+        </div>
+        <div class="mock-participant-row">
+          <div class="mock-avatar sm">OB</div>
+          <span class="mock-participant-name">Orianna Bot#MID</span>
+          <span class="mock-badge rank-gold" style="margin-left:auto;">Gold II</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

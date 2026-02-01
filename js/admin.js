@@ -45,7 +45,7 @@ async function getAuthToken() {
 
 async function adminFetch(url, options = {}) {
   const token = await getAuthToken();
-  if (!token) throw new Error('Non authentifie');
+  if (!token) throw new Error('Non authentifié');
 
   const res = await fetch(url, {
     ...options,
@@ -74,7 +74,7 @@ async function loadAdminStats() {
       </div>
       <div class="admin-stat-card">
         <span class="admin-stat-value">${stats.licensedServers}</span>
-        <span class="admin-stat-label">Serveurs licencies</span>
+        <span class="admin-stat-label">Serveurs licenciés</span>
       </div>
       <div class="admin-stat-card">
         <span class="admin-stat-value">${stats.activePlayers}</span>
@@ -90,7 +90,7 @@ async function loadAdminServers() {
   const tbody = document.getElementById('admin-servers-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Chargement...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="admin-loading">Chargement...</td></tr>';
 
   try {
     const servers = await adminFetch('/api/admin/servers');
@@ -102,7 +102,7 @@ async function loadAdminServers() {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Aucun serveur</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="admin-empty">Aucun serveur</td></tr>';
       return;
     }
 
@@ -117,6 +117,13 @@ async function loadAdminServers() {
       const licenseBadge = server.licensed
         ? '<span class="admin-badge admin-badge-active">Actif</span>'
         : '<span class="admin-badge admin-badge-inactive">Inactif</span>';
+
+      const isPublic = server.public !== false;
+      const visibilityBadge = isPublic
+        ? '<span class="admin-badge admin-badge-active">Public</span>'
+        : '<span class="admin-badge admin-badge-inactive">Prive</span>';
+      const visToggleLabel = isPublic ? 'Prive' : 'Public';
+      const isLicensed = !!server.licensed;
 
       const expiresAt = server.license_expires_at
         ? new Date(server.license_expires_at).toLocaleDateString('fr-FR')
@@ -134,6 +141,16 @@ async function loadAdminServers() {
           <td class="admin-guild-id">${esc(server.guild_id)}</td>
           <td>${server.member_count || 0}</td>
           <td>${licenseBadge}</td>
+          <td>
+            ${visibilityBadge}
+            <button class="btn btn-sm btn-ghost admin-toggle-visibility"
+                    data-server-id="${esc(server.id)}"
+                    data-public="${isPublic ? '1' : '0'}"
+                    data-licensed="${isLicensed ? '1' : '0'}"
+                    data-guild-name="${esc(server.guild_name)}">
+              ${visToggleLabel}
+            </button>
+          </td>
           <td>${esc(server.license_label || '-')}</td>
           <td>${esc(server.license_price != null ? server.license_price + ' EUR' : '-')}</td>
           <td>${expiresAt}</td>
@@ -154,8 +171,13 @@ async function loadAdminServers() {
       btn.addEventListener('click', () => handleToggleLicense(btn));
     });
 
+    // Bind visibility toggle buttons
+    tbody.querySelectorAll('.admin-toggle-visibility').forEach(btn => {
+      btn.addEventListener('click', () => handleToggleVisibility(btn));
+    });
+
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" class="admin-error">Erreur: ${esc(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="admin-error">Erreur: ${esc(err.message)}</td></tr>`;
   }
 }
 
@@ -176,7 +198,7 @@ async function handleToggleLicense(btn) {
           licensed: false,
         }),
       });
-      window.showToast(`Licence desactivee pour ${guildName}`);
+      window.showToast(`Licence désactivée pour ${guildName}`);
       await loadAdminServers();
     } catch (err) {
       window.showToast('Erreur: ' + err.message, 'error');
@@ -189,7 +211,7 @@ async function handleToggleLicense(btn) {
     if (!label) return;
     const price = prompt('Prix mensuel (EUR):', '0');
     if (price === null) return;
-    const months = prompt('Duree en mois:', '1');
+    const months = prompt('Durée en mois:', '1');
     if (!months) return;
 
     btn.disabled = true;
@@ -211,13 +233,40 @@ async function handleToggleLicense(btn) {
           license_expires_at: expiresAt.toISOString(),
         }),
       });
-      window.showToast(`Licence activee pour ${guildName}`);
+      window.showToast(`Licence activée pour ${guildName}`);
       await loadAdminServers();
     } catch (err) {
       window.showToast('Erreur: ' + err.message, 'error');
       btn.disabled = false;
       btn.textContent = 'Activer';
     }
+  }
+}
+
+async function handleToggleVisibility(btn) {
+  const serverId = btn.dataset.serverId;
+  const currentlyPublic = btn.dataset.public === '1';
+  const currentlyLicensed = btn.dataset.licensed === '1';
+  const guildName = btn.dataset.guildName;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    await adminFetch('/api/admin/license', {
+      method: 'POST',
+      body: JSON.stringify({
+        server_id: serverId,
+        licensed: currentlyLicensed,
+        public: !currentlyPublic,
+      }),
+    });
+    window.showToast(`${guildName} est maintenant ${!currentlyPublic ? 'public' : 'privé'}`);
+    await loadAdminServers();
+  } catch (err) {
+    window.showToast('Erreur: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = currentlyPublic ? 'Prive' : 'Public';
   }
 }
 
@@ -246,7 +295,7 @@ async function handleAddServer(e) {
         guild_icon: guildIcon || null,
       }),
     });
-    window.showToast(`Serveur ${guildName} ajoute`);
+    window.showToast(`Serveur ${guildName} ajouté`);
     document.getElementById('admin-add-server-form').reset();
     document.getElementById('admin-add-server-container').classList.add('hidden');
     await loadAdminServers();
@@ -300,12 +349,12 @@ async function loadAdminRequests() {
         case 'pending':
           statusBadge = '<span class="admin-badge admin-badge-pending">En attente</span>';
           actionsHtml = `
-            <button class="btn btn-sm btn-primary admin-req-action" data-action="payment" data-id="${esc(req.id)}">Paiement recu</button>
+            <button class="btn btn-sm btn-primary admin-req-action" data-action="payment" data-id="${esc(req.id)}">Paiement reçu</button>
             <button class="btn btn-sm btn-ghost admin-req-action" data-action="reject" data-id="${esc(req.id)}">Rejeter</button>
           `;
           break;
         case 'payment_received':
-          statusBadge = '<span class="admin-badge admin-badge-payment">Paiement recu</span>';
+          statusBadge = '<span class="admin-badge admin-badge-payment">Paiement reçu</span>';
           actionsHtml = `
             <button class="btn btn-sm btn-primary admin-req-action" data-action="confirm" data-id="${esc(req.id)}">Activer la licence</button>
             <button class="btn btn-sm btn-ghost admin-req-action" data-action="reject" data-id="${esc(req.id)}">Rejeter</button>
@@ -370,12 +419,12 @@ async function handleRequestAction(btn) {
     switch (action) {
       case 'payment':
         await adminFetch(`/api/admin/requests/${id}/payment`, { method: 'POST' });
-        window.showToast('Paiement marque comme recu');
+        window.showToast('Paiement marqué comme reçu');
         break;
 
       case 'confirm':
         await adminFetch(`/api/admin/requests/${id}/confirm`, { method: 'POST' });
-        window.showToast('Licence activee !');
+        window.showToast('Licence activée !');
         break;
 
       case 'reject': {
@@ -384,7 +433,7 @@ async function handleRequestAction(btn) {
           method: 'POST',
           body: JSON.stringify({ admin_note: note || null }),
         });
-        window.showToast('Demande rejetee');
+        window.showToast('Demande rejetée');
         break;
       }
     }

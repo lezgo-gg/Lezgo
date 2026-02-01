@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LFG.gg - Trouve ton groupe LoL</title>
+    <title>Lezgo.gg - Trouve ton groupe LoL</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     <!-- Navbar -->
     <nav id="navbar" class="navbar">
       <div class="navbar-brand">
-        <span class="logo">LFG</span><span class="logo-accent">.gg</span>
+        <span class="logo">Lezgo</span><span class="logo-accent">.gg</span>
       </div>
       <div class="navbar-actions" id="navbar-actions">
         <button class="btn btn-ghost" id="btn-login">Se connecter</button>
@@ -25,6 +25,9 @@
 
       <!-- Landing View -->
       <section id="view-landing" class="view active">
+        <div id="token-gate-banner" class="token-gate-banner hidden">
+          <p>Pour acceder a Lezgo.gg, rejoins une communaute partenaire sur Discord.</p>
+        </div>
         <div class="hero">
           <div class="hero-glow"></div>
           <div class="hero-content">
@@ -39,7 +42,7 @@
                 <svg width="20" height="15" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1A60 60 0 00.4 45a.2.2 0 00.1.2 58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.6 38.6 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.3 36.3 0 01-5.5 2.7.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.5 58.5 0 0070.1 45.2a.2.2 0 000-.2A59.7 59.7 0 0060.2 5a.2.2 0 00-.1 0zM23.7 36.9c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.8 7.1-6.3 7.1zm23.2 0c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.7 7.1-6.3 7.1z"/></svg>
                 Rejoindre avec Discord
               </button>
-              <button class="btn btn-ghost btn-lg" id="hero-browse">Parcourir les communautes</button>
+              <button class="btn btn-ghost btn-lg" id="hero-browse">Parcourir les communautés</button>
             </div>
             <div class="hero-stats">
               <div class="stat">
@@ -55,25 +58,400 @@
                 <span class="stat-label">Clic pour add</span>
               </div>
             </div>
+
+            <div class="hero-streamer-cta">
+              <p>Tu es streamer ?</p>
+              <button class="btn btn-primary" id="hero-streamer-cta">Devenir partenaire Lezgo.gg</button>
+            </div>
           </div>
         </div>
 
-        <div class="features">
-          <div class="feature-card" style="--delay:0">
-            <div class="feature-icon">&#9876;</div>
-            <h3>Rank verifie</h3>
-            <p>Ton rank est pull directement de l'API Riot. Pas de triche, pas de fake.</p>
+        <!-- Showcase Features -->
+        <div class="showcase-features">
+          <div class="showcase-features-header">
+            <h2>Tout ce que <span class="text-gradient">ta licence</span> debloque</h2>
+            <p>Communaute, LFG, tournois, analytics — tout est inclus. Voici ce que tes joueurs et toi obtenez.</p>
           </div>
-          <div class="feature-card" style="--delay:1">
-            <div class="feature-icon">&#128268;</div>
-            <h3>Filtres precis</h3>
-            <p>Filtre par rank, role, horaires et style de jeu. Trouve exactement qui tu cherches.</p>
+
+          <!-- FEATURE 1 : COMMUNAUTE -->
+          <div class="showcase-feature">
+            <div class="showcase-panel">
+              <span class="showcase-label">Tu configures</span>
+              <h3 class="showcase-title">Ta communaute sur Lezgo</h3>
+              <p class="showcase-desc">Selectionne ton serveur Discord, active la visibilite, et ta communaute apparait dans le hub.</p>
+              <div class="showcase-mock">
+                <div class="sc-form">
+                  <div class="server-card" style="pointer-events:none;">
+                    <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">R</div>
+                    <div class="server-card-info">
+                      <span class="server-card-name">Rift Academy</span>
+                      <span class="server-card-count" style="color:var(--success);font-weight:600;">&#10003; Selectionne</span>
+                    </div>
+                  </div>
+                  <div class="sc-toggle-row">
+                    <div class="sc-toggle"></div>
+                    Visible publiquement
+                  </div>
+                  <div class="sc-btn sc-btn-gold" style="margin-top:4px;">Activer la communaute</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-slash"></div>
+
+            <div class="showcase-panel">
+              <span class="showcase-label showcase-label-gold">Tes joueurs voient</span>
+              <h3 class="showcase-title">Leur serveur dans le hub</h3>
+              <p class="showcase-desc">Ta communaute apparait dans la section Communautes, accessible a tous les joueurs.</p>
+              <div class="showcase-mock">
+                <div class="sc-server-grid">
+                  <div class="server-card" style="pointer-events:none;border-color:rgba(200,155,60,0.3);box-shadow:0 0 15px var(--gold-glow);">
+                    <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">R</div>
+                    <div class="server-card-info">
+                      <span class="server-card-name">Rift Academy</span>
+                      <span class="server-card-count">42 membres</span>
+                    </div>
+                  </div>
+                  <div class="server-card" style="pointer-events:none;">
+                    <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">N</div>
+                    <div class="server-card-info">
+                      <span class="server-card-name">Nexus Legends</span>
+                      <span class="server-card-count">38 membres</span>
+                    </div>
+                  </div>
+                  <div class="server-card" style="pointer-events:none;">
+                    <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">B</div>
+                    <div class="server-card-info">
+                      <span class="server-card-name">Baron Nashor Club</span>
+                      <span class="server-card-count">27 membres</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="feature-card" style="--delay:2">
-            <div class="feature-icon">&#127918;</div>
-            <h3>Add en 1 clic</h3>
-            <p>Connecte via Discord. Un clic pour ajouter quelqu'un en ami. Zero friction.</p>
+
+          <!-- FEATURE 2 : LFG -->
+          <div class="showcase-feature">
+            <div class="showcase-panel">
+              <span class="showcase-label">Le joueur poste</span>
+              <h3 class="showcase-title">Une annonce LFG</h3>
+              <p class="showcase-desc">Tes membres cherchent un groupe en quelques secondes : role, note, et c'est parti.</p>
+              <div class="showcase-mock">
+                <div class="sc-form">
+                  <div class="sc-select">Role recherche : MID</div>
+                  <div class="sc-input">Cherche duo ranked tryhard, vocal obligatoire</div>
+                  <div class="sc-row">
+                    <div class="sc-btn sc-btn-gold">Publier l'annonce</div>
+                    <div class="sc-btn sc-btn-outline">Annuler</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-slash"></div>
+
+            <div class="showcase-panel">
+              <span class="showcase-label showcase-label-gold">La communaute voit</span>
+              <h3 class="showcase-title">Les annonces en temps reel</h3>
+              <p class="showcase-desc">Rang verifie, role, note, timer — tout pour trouver le bon coequipier.</p>
+              <div class="showcase-mock">
+                <div class="lfg-post" style="pointer-events:none;">
+                  <div class="lfg-post-user">
+                    <img class="lfg-post-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=K4ssadin&amp;backgroundColor=1a2040" alt="" />
+                    <div class="lfg-post-info">
+                      <span class="lfg-post-name">K4ssadin#EUW</span>
+                      <div class="lfg-post-meta">
+                        <span class="player-rank rank-DIAMOND" style="font-size:0.72rem;padding:0.15rem 0.5rem;">Diamond III</span>
+                        <span class="role-tag">MID</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="lfg-post-note">Cherche duo ranked tryhard, vocal obligatoire</div>
+                  <div class="lfg-post-actions">
+                    <span class="lfg-post-timer">2h14</span>
+                    <button class="btn btn-primary btn-sm" style="pointer-events:none;">Discord</button>
+                  </div>
+                </div>
+                <div class="lfg-post" style="pointer-events:none;">
+                  <div class="lfg-post-user">
+                    <img class="lfg-post-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=VayneSpotting&amp;backgroundColor=1a2040" alt="" />
+                    <div class="lfg-post-info">
+                      <span class="lfg-post-name">Vayne Spotting#BOT</span>
+                      <div class="lfg-post-meta">
+                        <span class="player-rank rank-PLATINUM" style="font-size:0.72rem;padding:0.15rem 0.5rem;">Platinum III</span>
+                        <span class="role-tag">ADC</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="lfg-post-note">Duo bot lane, je suis ADC main</div>
+                  <div class="lfg-post-actions">
+                    <span class="lfg-post-timer">1h03</span>
+                    <button class="btn btn-primary btn-sm" style="pointer-events:none;">Discord</button>
+                  </div>
+                </div>
+                <div class="lfg-post" style="pointer-events:none;">
+                  <div class="lfg-post-user">
+                    <img class="lfg-post-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=FlashOnD&amp;backgroundColor=1a2040" alt="" />
+                    <div class="lfg-post-info">
+                      <span class="lfg-post-name">FlashOnD#EUW</span>
+                      <div class="lfg-post-meta">
+                        <span class="player-rank rank-GOLD" style="font-size:0.72rem;padding:0.15rem 0.5rem;">Gold I</span>
+                        <span class="role-tag">SUP</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="lfg-post-note">Supp main, je roam beaucoup</div>
+                  <div class="lfg-post-actions">
+                    <span class="lfg-post-timer">45min</span>
+                    <button class="btn btn-primary btn-sm" style="pointer-events:none;">Discord</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- FEATURE 3 : TOURNOIS -->
+          <div class="showcase-feature">
+            <div class="showcase-panel">
+              <span class="showcase-label">Tu crees</span>
+              <h3 class="showcase-title">Un tournoi en quelques clics</h3>
+              <p class="showcase-desc">Format, rang requis, recompense, regles — tout est configurable. Active le cross-communaute pour inviter d'autres serveurs.</p>
+              <div class="showcase-mock">
+                <div class="sc-form">
+                  <div class="sc-input">Rift Academy Weekly</div>
+                  <div class="sc-row">
+                    <div class="sc-select">Format : 5v5</div>
+                    <div class="sc-input">32 joueurs max</div>
+                  </div>
+                  <div class="sc-row">
+                    <div class="sc-select">Rang min : Silver</div>
+                    <div class="sc-select">Rang max : Diamond</div>
+                  </div>
+                  <div class="sc-input">20 EUR de RP</div>
+                  <div class="sc-toggle-row">
+                    <div class="sc-toggle"></div>
+                    Tournoi cross-communaute
+                  </div>
+                  <div class="sc-btn sc-btn-gold" style="margin-top:4px;">Creer le tournoi</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-slash"></div>
+
+            <div class="showcase-panel">
+              <span class="showcase-label showcase-label-gold">Le resultat</span>
+              <h3 class="showcase-title">Un tournoi pret a jouer</h3>
+              <p class="showcase-desc">Inscriptions automatiques, verification de rang, liste de participants en temps reel.</p>
+              <div class="showcase-mock">
+                <div class="tournament-card sc-glow" style="pointer-events:none;cursor:default;border-color:rgba(200,155,60,0.3);box-shadow:0 0 20px var(--gold-glow);">
+                  <div class="tournament-card-header">
+                    <div class="tournament-card-servers">
+                      <span class="tournament-server-name">Rift Academy</span>
+                    </div>
+                    <span class="tournament-status tournament-status-open">Inscriptions</span>
+                  </div>
+                  <h3 class="tournament-card-title">Rift Academy Weekly</h3>
+                  <div class="tournament-card-meta">
+                    <span>4 fev.</span>
+                    <span class="tournament-format-badge">5v5</span>
+                    <span>14/32</span>
+                  </div>
+                  <div class="tournament-card-prize">20 EUR de RP</div>
+                </div>
+                <div class="sc-participants">
+                  <h4>Participants</h4>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Shaker&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Shaker#9999</span>
+                      <span class="player-rank rank-CHALLENGER">Challenger</span>
+                    </div>
+                  </div>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=DravenEnjoyer&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Draven Enjoyer#FR</span>
+                      <span class="player-rank rank-DIAMOND">Diamond I</span>
+                    </div>
+                  </div>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=SyndraMains&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Syndra Mains#EUW</span>
+                      <span class="player-rank rank-PLATINUM">Platinum II</span>
+                    </div>
+                  </div>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=FlashOnD&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">FlashOnD#EUW</span>
+                      <span class="player-rank rank-GOLD">Gold I</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FEATURE 4 : ANALYTICS -->
+          <div class="showcase-feature">
+            <div class="showcase-panel">
+              <span class="showcase-label">Le joueur lance</span>
+              <h3 class="showcase-title">Son analyse de gameplay</h3>
+              <p class="showcase-desc">Un clic, et l'app analyse ses dernieres ranked via l'API Riot pour generer un profil complet.</p>
+              <div class="showcase-mock">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0;">
+                  <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a2040,#2a3060);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  </div>
+                  <div class="sc-btn sc-btn-gold" style="font-size:0.9rem;padding:12px 28px;">Lancer l'analyse</div>
+                  <div style="width:100%;height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;margin-top:4px;">
+                    <div style="width:65%;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;"></div>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);">Analyse en cours... 6/10 matchs</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-slash"></div>
+
+            <div class="showcase-panel">
+              <span class="showcase-label showcase-label-gold">Il obtient</span>
+              <h3 class="showcase-title">Un dashboard complet</h3>
+              <p class="showcase-desc">Stats, champion pool, playstyle, forces/faiblesses — tout pour progresser.</p>
+              <div class="showcase-mock">
+                <div class="sc-stats-grid">
+                  <div class="stat-card stat-neutral">
+                    <span class="stat-card-value">3.42</span>
+                    <span class="stat-card-label">KDA</span>
+                  </div>
+                  <div class="stat-card stat-good">
+                    <span class="stat-card-value">54.2%</span>
+                    <span class="stat-card-label">Winrate</span>
+                  </div>
+                  <div class="stat-card stat-neutral">
+                    <span class="stat-card-value">7.1</span>
+                    <span class="stat-card-label">CS/min</span>
+                  </div>
+                  <div class="stat-card stat-good">
+                    <span class="stat-card-value">62%</span>
+                    <span class="stat-card-label">Kill Part.</span>
+                  </div>
+                </div>
+
+                <div style="margin-top:14px;">
+                  <div class="playstyle-header" style="margin-bottom:0.5rem;">
+                    <span class="playstyle-type" style="font-size:0.9rem;">Joueur Agressif</span>
+                  </div>
+                  <div class="playstyle-bars">
+                    <div class="playstyle-bar-row">
+                      <span class="playstyle-bar-icon">&#9876;</span>
+                      <span class="playstyle-bar-label">Agressivite</span>
+                      <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:78%;background:var(--error);"></div></div>
+                      <span class="playstyle-bar-val">7</span>
+                    </div>
+                    <div class="playstyle-bar-row">
+                      <span class="playstyle-bar-icon">&#127805;</span>
+                      <span class="playstyle-bar-label">Farming</span>
+                      <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:89%;background:var(--gold);"></div></div>
+                      <span class="playstyle-bar-val">8</span>
+                    </div>
+                    <div class="playstyle-bar-row">
+                      <span class="playstyle-bar-icon">&#128065;</span>
+                      <span class="playstyle-bar-label">Vision</span>
+                      <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:56%;background:var(--rank-diamond);"></div></div>
+                      <span class="playstyle-bar-val">5</span>
+                    </div>
+                    <div class="playstyle-bar-row">
+                      <span class="playstyle-bar-icon">&#129309;</span>
+                      <span class="playstyle-bar-label">Teamplay</span>
+                      <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:67%;background:var(--success);"></div></div>
+                      <span class="playstyle-bar-val">6</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FEATURE 5 : CROSS-COMMUNAUTE -->
+          <div class="showcase-feature">
+            <div class="showcase-panel">
+              <span class="showcase-label">Tu recois</span>
+              <h3 class="showcase-title">Une demande cross-communaute</h3>
+              <p class="showcase-desc">Un autre streamer t'invite pour un tournoi commun. Accepte, et les deux communautes fusionnent pour l'event.</p>
+              <div class="showcase-mock">
+                <div class="sc-request-card">
+                  <div class="sc-request-from">Demande de <span style="color:var(--gold);">La Faille</span></div>
+                  <div class="sc-request-title">La Faille x Rift Academy 2v2</div>
+                  <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <span class="tournament-format-badge">2v2</span>
+                    <span style="font-size:0.78rem;color:var(--text-secondary);">15 fev.</span>
+                    <span style="font-size:0.78rem;color:var(--text-secondary);">Silver - Platinum</span>
+                  </div>
+                  <div class="sc-request-msg">"2v2 entre nos communautes, ca vous tente ?"</div>
+                  <div class="sc-actions">
+                    <div class="sc-btn sc-btn-green sc-btn-sm">Accepter</div>
+                    <div class="sc-btn sc-btn-outline sc-btn-sm">Refuser</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="showcase-slash"></div>
+
+            <div class="showcase-panel">
+              <span class="showcase-label showcase-label-gold">Le tournoi devient</span>
+              <h3 class="showcase-title">Un event a deux communautes</h3>
+              <p class="showcase-desc">Les joueurs des deux serveurs peuvent s'inscrire. Double la visibilite, double le fun.</p>
+              <div class="showcase-mock">
+                <div class="tournament-card sc-glow" style="pointer-events:none;cursor:default;border-color:rgba(200,155,60,0.3);box-shadow:0 0 20px var(--gold-glow);">
+                  <div class="tournament-card-header">
+                    <div class="tournament-card-servers">
+                      <span class="tournament-server-name">La Faille</span>
+                      <span class="tournament-cross-badge">&times;</span>
+                      <span class="tournament-server-name">Rift Academy</span>
+                    </div>
+                    <span class="tournament-status tournament-status-open">Inscriptions</span>
+                  </div>
+                  <h3 class="tournament-card-title">La Faille x Rift Academy 2v2</h3>
+                  <div class="tournament-card-meta">
+                    <span>15 fev.</span>
+                    <span class="tournament-format-badge">2v2</span>
+                    <span>11/24</span>
+                  </div>
+                  <div class="tournament-card-prize">30 EUR de RP</div>
+                </div>
+                <div class="sc-participants">
+                  <h4>Participants</h4>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Volcrest&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Volcrest#1337</span>
+                      <span class="player-rank rank-MASTER">Master</span>
+                    </div>
+                  </div>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=LeGrull&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Le Grull#0033</span>
+                      <span class="player-rank rank-PLATINUM">Platinum I</span>
+                    </div>
+                  </div>
+                  <div class="tournament-participant-row">
+                    <img class="tournament-participant-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=OriannaBot&amp;backgroundColor=1a2040" alt="" />
+                    <div class="tournament-participant-info">
+                      <span class="tournament-participant-name">Orianna Bot#MID</span>
+                      <span class="player-rank rank-GOLD">Gold II</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -83,7 +461,7 @@
         <div class="modal-content auth-discord-modal">
           <button class="modal-close" id="modal-auth-close">&times;</button>
           <div class="auth-discord-content">
-            <h2>Rejoins LFG.gg</h2>
+            <h2>Rejoins Lezgo.gg</h2>
             <p class="auth-discord-subtitle">Connecte-toi avec Discord pour trouver ton groupe et etre ajoute en ami facilement.</p>
             <button class="btn btn-discord btn-block btn-lg" id="btn-discord-login">
               <svg width="20" height="15" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1A60 60 0 00.4 45a.2.2 0 00.1.2 58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.6 38.6 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.3 36.3 0 01-5.5 2.7.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.5 58.5 0 0070.1 45.2a.2.2 0 000-.2A59.7 59.7 0 0060.2 5a.2.2 0 00-.1 0zM23.7 36.9c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.8 7.1-6.3 7.1zm23.2 0c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.7 7.1-6.3 7.1z"/></svg>
@@ -117,6 +495,7 @@
           <div class="profile-tabs">
             <button class="profile-tab active" data-tab="tab-form">Profil</button>
             <button class="profile-tab" data-tab="tab-analyse">Analyse</button>
+            <button class="profile-tab" data-tab="tab-streamer">Espace Streamer</button>
           </div>
 
           <!-- TAB: Profil Form -->
@@ -134,7 +513,7 @@
                     <label for="riot-tag">Tag</label>
                     <input type="text" id="riot-tag" placeholder="EUW" required />
                   </div>
-                  <button type="button" class="btn btn-secondary" id="btn-verify-riot">Verifier</button>
+                  <button type="button" class="btn btn-secondary" id="btn-verify-riot">Vérifier</button>
                 </div>
                 <div id="riot-verify-result" class="verify-result hidden"></div>
               </div>
@@ -142,12 +521,12 @@
               <div class="form-section">
                 <h3>Rank</h3>
                 <div class="rank-display" id="rank-display">
-                  <span class="rank-placeholder">Verifie ton Riot ID pour afficher ton rank</span>
+                  <span class="rank-placeholder">Vérifie ton Riot ID pour afficher ton rank</span>
                 </div>
               </div>
 
               <div class="form-section">
-                <h3>Roles preferes</h3>
+                <h3>Rôles préférés</h3>
                 <div class="checkbox-group roles-group">
                   <label class="chip-checkbox"><input type="checkbox" name="roles" value="TOP" /><span class="chip">TOP</span></label>
                   <label class="chip-checkbox"><input type="checkbox" name="roles" value="JUNGLE" /><span class="chip">JGL</span></label>
@@ -186,82 +565,13 @@
                 </div>
               </div>
 
-              <div class="form-section hidden" id="streamer-section">
-                <h3>Abonnement Streamer</h3>
-
-                <!-- Twitch account -->
-                <div class="streamer-linked">
-                  <img id="streamer-twitch-avatar" class="streamer-twitch-avatar" src="" alt="" />
-                  <div class="streamer-linked-info">
-                    <span class="streamer-twitch-name" id="streamer-twitch-name"></span>
-                    <span class="streamer-twitch-type" id="streamer-twitch-type"></span>
-                  </div>
-                </div>
-
-                <!-- Subscription details -->
-                <div class="sub-details" id="sub-details">
-                  <div class="sub-row">
-                    <span class="sub-label">Statut</span>
-                    <span class="sub-value sub-status" id="sub-status"></span>
-                  </div>
-                  <div class="sub-row">
-                    <span class="sub-label">Serveur</span>
-                    <span class="sub-value" id="sub-server-name"></span>
-                  </div>
-                  <div class="sub-row">
-                    <span class="sub-label">Prix</span>
-                    <span class="sub-value" id="sub-price"></span>
-                  </div>
-                  <div class="sub-row">
-                    <span class="sub-label">Debut</span>
-                    <span class="sub-value" id="sub-start"></span>
-                  </div>
-                  <div class="sub-row">
-                    <span class="sub-label">Expiration</span>
-                    <span class="sub-value" id="sub-expires"></span>
-                  </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="sub-actions">
-                  <a id="sub-renew-btn" class="btn btn-primary" href="#" target="_blank" rel="noopener">Renouveler</a>
-                  <button class="btn btn-ghost" id="sub-edit-server-btn">Modifier le serveur</button>
-                </div>
-
-                <!-- Edit server form (hidden) -->
-                <div id="sub-edit-server" class="sub-edit-server hidden">
-                  <div class="form-group">
-                    <label for="sub-guild-id">Guild ID</label>
-                    <input type="text" id="sub-guild-id" placeholder="123456789012345678" required />
-                  </div>
-                  <div class="form-group">
-                    <label for="sub-guild-name">Nom du serveur</label>
-                    <input type="text" id="sub-guild-name" placeholder="Mon serveur Discord" required />
-                  </div>
-                  <div class="form-group">
-                    <label for="sub-guild-icon">Icon hash (optionnel)</label>
-                    <input type="text" id="sub-guild-icon" placeholder="abc123hash" />
-                  </div>
-                  <div class="sub-edit-actions">
-                    <button class="btn btn-primary btn-sm" id="sub-save-server">Sauvegarder</button>
-                    <button class="btn btn-ghost btn-sm" id="sub-cancel-server">Annuler</button>
-                  </div>
-                </div>
-
-                <!-- Payment history -->
-                <div class="sub-history">
-                  <h4>Historique</h4>
-                  <div id="sub-history-list"></div>
-                </div>
-              </div>
-
               <button type="submit" class="btn btn-primary btn-block">Sauvegarder mon profil</button>
 
               <div class="form-section danger-zone">
                 <h3>Zone dangereuse</h3>
-                <p class="danger-zone-desc">La suppression de ton compte est irreversible. Toutes tes donnees seront effacees.</p>
+                <p class="danger-zone-desc">La suppression de ton compte est irréversible. Toutes tes données seront effacées.</p>
                 <p class="danger-zone-desc danger-zone-warn hidden" id="delete-streamer-warn">
-                  Tu es streamer partenaire : supprimer ton compte desactivera la licence de ton serveur. Ta communaute perdra l'acces a lezgo.gg.
+                  Tu es streamer partenaire : supprimer ton compte désactivera la licence de ton serveur. Ta communauté perdra l'accès à lezgo.gg.
                 </p>
                 <button type="button" class="btn btn-danger" id="btn-delete-account">Supprimer mon compte</button>
               </div>
@@ -276,19 +586,19 @@
               <div class="delete-confirm-content">
                 <div class="delete-confirm-icon">&#9888;</div>
                 <h2>Supprimer ton compte ?</h2>
-                <p class="delete-confirm-desc">Cette action est <strong>irreversible</strong>. Toutes tes donnees seront supprimees :</p>
+                <p class="delete-confirm-desc">Cette action est <strong>irréversible</strong>. Toutes tes données seront supprimées :</p>
                 <ul class="delete-confirm-list">
                   <li>Profil et statistiques</li>
-                  <li>Historique des matchs analyses</li>
+                  <li>Historique des matchs analysés</li>
                   <li>Appartenances aux serveurs</li>
                 </ul>
                 <p class="delete-confirm-streamer hidden" id="delete-confirm-streamer">
-                  &#9888; <strong>Attention streamer :</strong> la licence de ton serveur sera desactivee. Toute ta communaute perdra l'acces a lezgo.gg immediatement.
+                  &#9888; <strong>Attention streamer :</strong> la licence de ton serveur sera désactivée. Toute ta communauté perdra l'accès à lezgo.gg immédiatement.
                 </p>
                 <p class="delete-confirm-type">Tape <strong>SUPPRIMER</strong> pour confirmer</p>
                 <input type="text" id="delete-confirm-input" class="delete-confirm-input" placeholder="SUPPRIMER" autocomplete="off" />
                 <div class="delete-confirm-actions">
-                  <button class="btn btn-danger btn-block" id="btn-confirm-delete" disabled>Supprimer definitivement</button>
+                  <button class="btn btn-danger btn-block" id="btn-confirm-delete" disabled>Supprimer définitivement</button>
                   <button class="btn btn-ghost btn-block" id="btn-cancel-delete">Annuler</button>
                 </div>
               </div>
@@ -414,6 +724,398 @@
 
           </div>
 
+          <!-- TAB: Espace Streamer -->
+          <div id="tab-streamer" class="profile-tab-content">
+
+            <!-- State 1: CTA (no request yet) -->
+            <div id="streamer-cta" class="streamer-cta-section">
+              <div class="streamer-cta-card">
+                <div class="streamer-cta-icon">&#127902;</div>
+                <h2>Deviens partenaire Lezgo.gg</h2>
+                <p>Donne a ta communaute un outil de matchmaking LoL exclusif. Inscris ton serveur Discord et offre a tes viewers un moyen de trouver leur groupe parfait.</p>
+                <button class="btn btn-primary btn-lg" id="streamer-start-btn">Démarrer</button>
+              </div>
+            </div>
+
+            <!-- State 2: Flow (guild picker → twitch → pricing → payment → active → rejected) -->
+            <div id="streamer-flow" class="hidden">
+
+              <!-- Step: Select guild via Discord OAuth -->
+              <div id="streamer-form">
+                <div class="gate-icon">&#128640;</div>
+                <h2>Sélectionne ton serveur Discord</h2>
+                <p class="gate-subtitle">Sélectionne le serveur Discord que tu veux associer à Lezgo.gg</p>
+
+                <div id="streamer-guild-select">
+                  <button type="button" class="btn btn-discord btn-lg btn-block" id="streamer-discord-guilds">
+                    <svg width="20" height="15" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.3 37.3 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1A60 60 0 00.4 45a.2.2 0 00.1.2 58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.6 38.6 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .3 36.3 36.3 0 01-5.5 2.7.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.5 58.5 0 0070.1 45.2a.2.2 0 000-.2A59.7 59.7 0 0060.2 5a.2.2 0 00-.1 0zM23.7 36.9c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.8 7.1-6.3 7.1zm23.2 0c-3.5 0-6.3-3.2-6.3-7.1s2.8-7.2 6.3-7.2 6.4 3.2 6.3 7.2c0 3.9-2.7 7.1-6.3 7.1z"/></svg>
+                    Sélectionner mon serveur
+                  </button>
+                  <p class="gate-guild-hint">Seuls les serveurs ou tu es admin seront affiches</p>
+                </div>
+
+                <div id="streamer-guild-picker" class="hidden">
+                  <p class="gate-guild-picker-label">Choisis ton serveur :</p>
+                  <div id="streamer-guild-list" class="gate-guild-list"></div>
+                </div>
+
+                <div id="streamer-guild-selected" class="hidden">
+                  <div class="gate-selected-guild">
+                    <img id="streamer-selected-icon" class="gate-selected-icon" src="" alt="" />
+                    <span id="streamer-selected-name" class="gate-selected-name"></span>
+                    <button type="button" class="btn btn-ghost btn-sm" id="streamer-guild-change">Changer</button>
+                  </div>
+                </div>
+
+                <form id="streamer-request-form" class="gate-request-form">
+                  <input type="hidden" id="streamer-guild-id" />
+                  <input type="hidden" id="streamer-guild-name" />
+                  <input type="hidden" id="streamer-guild-icon" />
+                  <div class="gate-form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg" id="streamer-submit-btn" disabled>Envoyer la demande</button>
+                    <button type="button" class="btn btn-ghost" id="streamer-cancel-form">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Step: Twitch connect -->
+              <div id="streamer-status-twitch" class="hidden">
+                <div class="gate-icon twitch-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                </div>
+                <h2>Connecte ton Twitch</h2>
+                <p class="gate-subtitle">Pour découvrir ton offre personnalisée, connecte ton compte Twitch.</p>
+                <button class="btn btn-twitch btn-lg" id="streamer-twitch-connect">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                  Connecter Twitch
+                </button>
+                <p class="gate-desc">Nous utilisons tes stats pour calculer un prix adapté à ton audience.</p>
+              </div>
+
+              <!-- Step: Pricing -->
+              <div id="streamer-status-pricing" class="hidden">
+                <div class="gate-pricing-card">
+                  <div class="gate-twitch-profile" id="streamer-twitch-profile">
+                    <img id="streamer-twitch-avatar" class="gate-twitch-avatar" src="" alt="" />
+                    <div class="gate-twitch-info">
+                      <span class="gate-twitch-name" id="streamer-twitch-name"></span>
+                      <span class="gate-twitch-type" id="streamer-twitch-type"></span>
+                    </div>
+                  </div>
+                  <div class="gate-twitch-stats">
+                    <div class="gate-stat">
+                      <span class="gate-stat-value" id="streamer-stat-followers">-</span>
+                      <span class="gate-stat-label">Followers</span>
+                    </div>
+                    <div class="gate-stat">
+                      <span class="gate-stat-value" id="streamer-stat-viewers">-</span>
+                      <span class="gate-stat-label">Viewers moy.</span>
+                    </div>
+                  </div>
+                  <div class="pricing-demos">
+                    <div class="pricing-demo-card">
+                      <div class="pricing-demo-video" data-video="discord-bot">
+                        <video muted loop playsinline preload="metadata" poster="/assets/demo-discord-thumb.jpg">
+                          <source src="/assets/demo-discord.mp4" type="video/mp4" />
+                        </video>
+                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
+                      </div>
+                      <strong>Ton Discord, automatisé</strong>
+                      <p>Le bot crée les channels vocaux, forme les groupes et notifie les joueurs. Tu n'as rien à gérer.</p>
+                    </div>
+                    <div class="pricing-demo-card">
+                      <div class="pricing-demo-video" data-video="matchmaking">
+                        <video muted loop playsinline preload="metadata" poster="/assets/demo-matchmaking-thumb.jpg">
+                          <source src="/assets/demo-matchmaking.mp4" type="video/mp4" />
+                        </video>
+                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
+                      </div>
+                      <strong>Viewer games & tournois</strong>
+                      <p>Matchmaking équilibré par rank en un clic. Tes viewers jouent ensemble même quand tu es offline.</p>
+                    </div>
+                    <div class="pricing-demo-card">
+                      <div class="pricing-demo-video" data-video="stats">
+                        <video muted loop playsinline preload="metadata" poster="/assets/demo-stats-thumb.jpg">
+                          <source src="/assets/demo-stats.mp4" type="video/mp4" />
+                        </video>
+                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
+                      </div>
+                      <strong>Stats & contenu</strong>
+                      <p>Profils vérifiés, classements communautaires, analyse de performance. Du contenu prêt à exploiter.</p>
+                    </div>
+                  </div>
+
+                  <div class="gate-price-display">
+                    <span class="gate-price-label">Ton offre mensuelle</span>
+                    <span class="gate-price-amount" id="streamer-price-amount"></span>
+                    <span class="gate-price-period">EUR / mois</span>
+                  </div>
+                  <p class="pricing-note">Prix calculé selon ton audience. Sans engagement, résiliable à tout moment.</p>
+
+                  <div class="pricing-cta-group">
+                    <a id="streamer-paypal-link" class="btn btn-primary btn-lg" href="#" target="_blank" rel="noopener">Payer et activer</a>
+                    <a class="btn btn-discord btn-lg" href="https://discord.com/users/713053980464513147" target="_blank" rel="noopener">Des questions ? Contacte-moi sur Discord</a>
+                  </div>
+                  <p class="gate-desc">Activation sous 24h après paiement. Un doute ? Écris-moi directement sur Discord.</p>
+                </div>
+                <div id="streamer-sur-devis" class="gate-sur-devis hidden">
+                  <div class="gate-icon">&#128142;</div>
+                  <h2>Offre sur mesure</h2>
+                  <p class="gate-subtitle">Ton audience dépasse 500K followers. Contacte-nous pour un devis personnalisé.</p>
+                  <a class="btn btn-discord btn-lg" href="https://discord.com/users/713053980464513147" target="_blank" rel="noopener">Contacte-moi sur Discord</a>
+                </div>
+              </div>
+
+              <!-- Step: Payment received -->
+              <div id="streamer-status-payment" class="hidden">
+                <div class="gate-icon">&#9203;</div>
+                <h2>Paiement reçu !</h2>
+                <p class="gate-subtitle">Activation en cours...</p>
+                <div class="gate-loader"><div class="gate-loader-bar"></div></div>
+                <p class="gate-desc">Ton accès sera activé très prochainement.</p>
+              </div>
+
+              <!-- Step: Select Discord server (after activation) -->
+              <div id="streamer-status-select-server" class="hidden">
+                <div class="gate-icon">&#128279;</div>
+                <h2>Selectionne ton serveur Discord</h2>
+                <p class="gate-subtitle">Ta licence est active ! Choisis le serveur Discord ou deployer Lezgo.gg.<br>
+                <strong>Un seul serveur a la fois.</strong> Tu pourras le changer plus tard.</p>
+
+                <div id="streamer-post-guild-select">
+                  <button type="button" class="btn btn-discord btn-lg btn-block" id="streamer-post-discord-guilds">
+                    Selectionner mon serveur
+                  </button>
+                  <p class="gate-guild-hint">Seuls les serveurs ou tu es admin seront affiches</p>
+                </div>
+
+                <div id="streamer-post-guild-picker" class="hidden">
+                  <p class="gate-guild-picker-label">Choisis ton serveur :</p>
+                  <div id="streamer-post-guild-list" class="gate-guild-list"></div>
+                </div>
+
+                <div id="streamer-post-guild-selected" class="hidden">
+                  <div class="gate-selected-guild">
+                    <img id="streamer-post-selected-icon" class="gate-selected-icon" src="" alt="" />
+                    <span id="streamer-post-selected-name" class="gate-selected-name"></span>
+                  </div>
+                  <button class="btn btn-primary btn-lg" id="streamer-post-confirm-server">Confirmer ce serveur</button>
+                </div>
+              </div>
+
+              <!-- Step: Active -->
+              <div id="streamer-status-active" class="hidden">
+                <div class="gate-icon">&#9989;</div>
+                <h2>Ton serveur est actif !</h2>
+                <p class="gate-subtitle">Ta licence est active. Ajoute le bot et accède à lezgo.gg.</p>
+                <div class="gate-active-actions">
+                  <a id="streamer-bot-invite" class="btn btn-discord btn-lg" href="#" target="_blank" rel="noopener">Ajouter le bot Discord</a>
+                  <button class="btn btn-primary btn-lg" id="streamer-access-app">Accéder à lezgo.gg</button>
+                </div>
+              </div>
+
+              <!-- Step: Rejected -->
+              <div id="streamer-status-rejected" class="hidden">
+                <div class="gate-icon">&#10060;</div>
+                <h2>Demande refusée</h2>
+                <p class="gate-subtitle" id="streamer-reject-reason"></p>
+                <button class="btn btn-primary btn-lg" id="streamer-resubmit">Resoumettre une demande</button>
+              </div>
+            </div>
+
+            <!-- Tournament management (visible if active sub) -->
+            <div id="streamer-tournaments" class="hidden">
+              <div class="form-section">
+                <h3>Gestion des tournois</h3>
+
+                <!-- Incoming cross-community requests -->
+                <div class="tournament-manage-subsection">
+                  <h4>Demandes cross-communaute</h4>
+                  <div id="tournament-requests-list"></div>
+                </div>
+
+                <!-- Create tournament -->
+                <div class="tournament-manage-subsection">
+                  <button class="btn btn-primary btn-sm" id="btn-toggle-tournament-form">+ Creer un tournoi</button>
+                  <form id="tournament-create-form" class="tournament-create-form hidden">
+                    <div class="form-group">
+                      <label for="tournament-title">Titre</label>
+                      <input type="text" id="tournament-title" maxlength="100" required placeholder="Tournoi Weekly..." />
+                    </div>
+                    <div class="form-group">
+                      <label for="tournament-description">Description</label>
+                      <input type="text" id="tournament-description" placeholder="Decris ton tournoi..." />
+                    </div>
+                    <div class="tournament-form-row">
+                      <div class="form-group">
+                        <label for="tournament-format">Format</label>
+                        <select id="tournament-format">
+                          <option value="5v5">5v5</option>
+                          <option value="1v1">1v1</option>
+                          <option value="2v2">2v2</option>
+                          <option value="3v3">3v3</option>
+                          <option value="custom">Custom</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="tournament-max">Max participants</label>
+                        <input type="text" id="tournament-max" value="32" />
+                      </div>
+                    </div>
+                    <div class="tournament-form-row">
+                      <div class="form-group">
+                        <label for="tournament-rank-min">Rang minimum</label>
+                        <select id="tournament-rank-min">
+                          <option value="">Aucun</option>
+                          <option value="IRON">Iron</option>
+                          <option value="BRONZE">Bronze</option>
+                          <option value="SILVER">Silver</option>
+                          <option value="GOLD">Gold</option>
+                          <option value="PLATINUM">Platinum</option>
+                          <option value="DIAMOND">Diamond</option>
+                          <option value="MASTER">Master</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="tournament-rank-max">Rang maximum</label>
+                        <select id="tournament-rank-max">
+                          <option value="">Aucun</option>
+                          <option value="SILVER">Silver</option>
+                          <option value="GOLD">Gold</option>
+                          <option value="PLATINUM">Platinum</option>
+                          <option value="DIAMOND">Diamond</option>
+                          <option value="MASTER">Master</option>
+                          <option value="CHALLENGER">Challenger</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="tournament-prize">Recompense</label>
+                      <input type="text" id="tournament-prize" placeholder="20 EUR de RP, Skin..." />
+                    </div>
+                    <div class="form-group">
+                      <label for="tournament-rules">Regles</label>
+                      <input type="text" id="tournament-rules" placeholder="Draft pick, pas de remake..." />
+                    </div>
+                    <div class="tournament-form-row">
+                      <div class="form-group">
+                        <label for="tournament-starts-at">Debut</label>
+                        <input type="datetime-local" id="tournament-starts-at" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="tournament-ends-at">Fin (optionnel)</label>
+                        <input type="datetime-local" id="tournament-ends-at" />
+                      </div>
+                    </div>
+                    <div class="tournament-cross-row">
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="tournament-cross-toggle" />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Cross-communaute</span>
+                      </label>
+                    </div>
+                    <div id="tournament-cross-section" class="hidden">
+                      <div class="form-group">
+                        <label for="tournament-target-server">Communaute cible</label>
+                        <select id="tournament-target-server">
+                          <option value="">Choisir...</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="tournament-form-actions">
+                      <button type="submit" class="btn btn-primary btn-sm">Creer le tournoi</button>
+                      <button type="button" class="btn btn-ghost btn-sm" id="btn-cancel-tournament">Annuler</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Existing tournaments list -->
+                <div class="tournament-manage-subsection">
+                  <h4>Mes tournois</h4>
+                  <div id="streamer-tournaments-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- State 3: Active subscription management -->
+            <div id="streamer-subscription" class="hidden">
+              <div class="form-section">
+                <h3>Abonnement Streamer</h3>
+
+                <div class="streamer-linked">
+                  <img id="streamer-sub-twitch-avatar" class="streamer-twitch-avatar" src="" alt="" />
+                  <div class="streamer-linked-info">
+                    <span class="streamer-twitch-name" id="streamer-sub-twitch-name"></span>
+                    <span class="streamer-twitch-type" id="streamer-sub-twitch-type"></span>
+                  </div>
+                </div>
+
+                <div class="sub-details" id="streamer-sub-details">
+                  <div class="sub-row">
+                    <span class="sub-label">Statut</span>
+                    <span class="sub-value sub-status" id="streamer-sub-status"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Serveur</span>
+                    <span class="sub-value" id="streamer-sub-server-name"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Prix</span>
+                    <span class="sub-value" id="streamer-sub-price"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Debut</span>
+                    <span class="sub-value" id="streamer-sub-start"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Expiration</span>
+                    <span class="sub-value" id="streamer-sub-expires"></span>
+                  </div>
+                </div>
+
+                <!-- Visibility toggle -->
+                <div class="sub-row" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                  <span class="sub-label">Visibilite du serveur</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="streamer-visibility-toggle" checked />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label" id="streamer-visibility-label">Public</span>
+                  </label>
+                </div>
+
+                <div class="sub-actions">
+                  <a id="streamer-sub-renew-btn" class="btn btn-primary" href="#" target="_blank" rel="noopener">Renouveler</a>
+                  <button class="btn btn-ghost" id="streamer-sub-edit-server-btn">Modifier le serveur</button>
+                </div>
+
+                <div id="streamer-sub-edit-server" class="sub-edit-server hidden">
+                  <div class="form-group">
+                    <label for="streamer-sub-guild-id">Guild ID</label>
+                    <input type="text" id="streamer-sub-guild-id" placeholder="123456789012345678" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="streamer-sub-guild-name">Nom du serveur</label>
+                    <input type="text" id="streamer-sub-guild-name" placeholder="Mon serveur Discord" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="streamer-sub-guild-icon">Icon hash (optionnel)</label>
+                    <input type="text" id="streamer-sub-guild-icon" placeholder="abc123hash" />
+                  </div>
+                  <div class="sub-edit-actions">
+                    <button class="btn btn-primary btn-sm" id="streamer-sub-save-server">Sauvegarder</button>
+                    <button class="btn btn-ghost btn-sm" id="streamer-sub-cancel-server">Annuler</button>
+                  </div>
+                </div>
+
+                <div class="sub-history">
+                  <h4>Historique</h4>
+                  <div id="streamer-sub-history-list"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
           <!-- Champion Detail Modal -->
           <div id="modal-champion" class="modal hidden">
             <div class="modal-backdrop"></div>
@@ -430,129 +1132,17 @@
         <div class="gate-container">
           <div class="gate-glow"></div>
           <div class="gate-content">
+            <div class="gate-icon">&#128274;</div>
+            <h1>Acces reserve</h1>
+            <p class="gate-subtitle">Rejoins une communaute partenaire sur Discord pour acceder au site.</p>
 
-            <!-- Default state: no request -->
-            <div id="gate-default">
-              <div class="gate-icon">&#128274;</div>
-              <h1>Acces reserve</h1>
-              <p class="gate-subtitle">Rejoins la communaute de ton streamer pour acceder a lezgo.gg</p>
-              <p class="gate-desc">Demande a ton streamer prefere de s'associer avec LFG.gg pour donner acces a sa communaute.</p>
-
-              <div class="gate-streamer-cta">
-                <p class="gate-streamer-label">Tu es streamer ?</p>
-                <button class="btn btn-primary btn-lg" id="gate-become-partner">Devenir partenaire lezgo.gg</button>
+            <div class="gate-servers-section">
+              <div class="gate-servers-grid" id="gate-servers-grid">
+                <div class="loading-state">Chargement des communautés...</div>
               </div>
             </div>
 
-            <!-- Request form -->
-            <div id="gate-form" class="hidden">
-              <div class="gate-icon">&#128640;</div>
-              <h1>Devenir partenaire</h1>
-              <p class="gate-subtitle">Remplis les infos de ton serveur Discord pour commencer</p>
-              <form id="gate-request-form" class="gate-request-form">
-                <div class="form-group">
-                  <label for="gate-guild-id">Guild ID</label>
-                  <input type="text" id="gate-guild-id" placeholder="123456789012345678" required />
-                </div>
-                <div class="form-group">
-                  <label for="gate-guild-name">Nom du serveur</label>
-                  <input type="text" id="gate-guild-name" placeholder="Mon serveur Discord" required />
-                </div>
-                <div class="form-group">
-                  <label for="gate-guild-icon">Icon hash (optionnel)</label>
-                  <input type="text" id="gate-guild-icon" placeholder="abc123hash" />
-                </div>
-                <div class="gate-form-actions">
-                  <button type="submit" class="btn btn-primary btn-lg">Envoyer la demande</button>
-                  <button type="button" class="btn btn-ghost" id="gate-cancel-form">Annuler</button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Status: pending (no Twitch connected yet) -->
-            <div id="gate-status-twitch" class="hidden">
-              <div class="gate-icon twitch-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
-              </div>
-              <h1>Connecte ton Twitch</h1>
-              <p class="gate-subtitle">Pour decouvrir ton offre personnalisee, connecte ton compte Twitch.</p>
-              <button class="btn btn-twitch btn-lg" id="gate-twitch-connect">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
-                Connecter Twitch
-              </button>
-              <p class="gate-desc">Nous utilisons tes stats pour calculer un prix adapte a ton audience.</p>
-            </div>
-
-            <!-- Status: pending (Twitch connected, price calculated) -->
-            <div id="gate-status-pricing" class="hidden">
-              <div class="gate-pricing-card">
-                <div class="gate-twitch-profile" id="gate-twitch-profile">
-                  <img id="gate-twitch-avatar" class="gate-twitch-avatar" src="" alt="" />
-                  <div class="gate-twitch-info">
-                    <span class="gate-twitch-name" id="gate-twitch-name"></span>
-                    <span class="gate-twitch-type" id="gate-twitch-type"></span>
-                  </div>
-                </div>
-                <div class="gate-twitch-stats">
-                  <div class="gate-stat">
-                    <span class="gate-stat-value" id="gate-stat-followers">-</span>
-                    <span class="gate-stat-label">Followers</span>
-                  </div>
-                  <div class="gate-stat">
-                    <span class="gate-stat-value" id="gate-stat-viewers">-</span>
-                    <span class="gate-stat-label">Viewers moy.</span>
-                  </div>
-                </div>
-                <div class="gate-price-display">
-                  <span class="gate-price-label">Ton offre mensuelle</span>
-                  <span class="gate-price-amount" id="gate-price-amount"></span>
-                  <span class="gate-price-period">EUR / mois</span>
-                </div>
-                <a id="gate-paypal-link" class="btn btn-primary btn-lg btn-block" href="#" target="_blank" rel="noopener">Payer via PayPal</a>
-                <p class="gate-desc">Une fois le paiement effectue, ton acces sera active sous 24h.</p>
-              </div>
-              <!-- Sur devis (500K+ followers) -->
-              <div id="gate-sur-devis" class="gate-sur-devis hidden">
-                <div class="gate-icon">&#128142;</div>
-                <h1>Offre sur mesure</h1>
-                <p class="gate-subtitle">Ton audience depasse 500K followers. Contacte-nous pour un devis personnalise.</p>
-                <a class="btn btn-primary btn-lg" href="https://discord.gg/lezgo" target="_blank" rel="noopener">Nous contacter</a>
-              </div>
-            </div>
-
-            <!-- Status: payment_received -->
-            <div id="gate-status-payment" class="hidden">
-              <div class="gate-icon">&#9203;</div>
-              <h1>Paiement recu !</h1>
-              <p class="gate-subtitle">Activation en cours...</p>
-              <div class="gate-loader">
-                <div class="gate-loader-bar"></div>
-              </div>
-              <p class="gate-desc">Ton acces sera active tres prochainement.</p>
-            </div>
-
-            <!-- Status: active -->
-            <div id="gate-status-active" class="hidden">
-              <div class="gate-icon">&#9989;</div>
-              <h1>Ton serveur est actif !</h1>
-              <p class="gate-subtitle">Ta licence est active. Ajoute le bot et accede a lezgo.gg.</p>
-              <div class="gate-active-actions">
-                <a id="gate-bot-invite" class="btn btn-discord btn-lg" href="#" target="_blank" rel="noopener">
-                  Ajouter le bot Discord
-                </a>
-                <button class="btn btn-primary btn-lg" id="gate-access-app">Acceder a lezgo.gg</button>
-              </div>
-            </div>
-
-            <!-- Status: rejected -->
-            <div id="gate-status-rejected" class="hidden">
-              <div class="gate-icon">&#10060;</div>
-              <h1>Demande refusee</h1>
-              <p class="gate-subtitle" id="gate-reject-reason"></p>
-              <button class="btn btn-primary btn-lg" id="gate-resubmit">Resoumettre une demande</button>
-            </div>
-
-            <button class="btn btn-ghost btn-lg gate-logout-btn" id="gate-logout">Se deconnecter</button>
+            <button class="btn btn-ghost btn-lg gate-logout-btn" id="gate-logout">Se déconnecter</button>
           </div>
         </div>
       </section>
@@ -561,7 +1151,7 @@
       <section id="view-onboarding" class="view hidden">
         <div class="onb-container">
           <div class="onb-header">
-            <span class="logo">LFG</span><span class="logo-accent">.gg</span>
+            <span class="logo">Lezgo</span><span class="logo-accent">.gg</span>
             <div class="onb-progress">
               <span class="onb-progress-dot current" data-step="1">1</span>
               <span class="onb-progress-line"></span>
@@ -574,7 +1164,7 @@
           <!-- Step 1: Link Riot ID -->
           <div id="onb-step-1" class="onb-step">
             <h2>Lie ton compte Riot</h2>
-            <p class="onb-step-desc">Verifie ton identite LoL pour debloquer toutes les fonctionnalites.</p>
+            <p class="onb-step-desc">Vérifie ton identité LoL pour débloquer toutes les fonctionnalités.</p>
             <div class="onb-riot-row">
               <div class="form-group flex-1">
                 <label for="onb-riot-name">Game Name</label>
@@ -585,7 +1175,7 @@
                 <label for="onb-riot-tag">Tag</label>
                 <input type="text" id="onb-riot-tag" placeholder="EUW" />
               </div>
-              <button type="button" class="btn btn-secondary" id="onb-verify-riot">Verifier</button>
+              <button type="button" class="btn btn-secondary" id="onb-verify-riot">Vérifier</button>
             </div>
             <div id="onb-verify-result" class="onb-verify-result hidden"></div>
             <div class="onb-actions">
@@ -599,7 +1189,7 @@
             <p class="onb-step-desc">Ces infos aident a te matcher avec les bons joueurs.</p>
 
             <div class="form-section">
-              <h3>Roles preferes</h3>
+              <h3>Rôles préférés</h3>
               <div class="checkbox-group roles-group">
                 <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="TOP" /><span class="chip">TOP</span></label>
                 <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="JUNGLE" /><span class="chip">JGL</span></label>
@@ -650,7 +1240,7 @@
             <div class="onb-analysis-status" id="onb-analysis-status">Analyse en cours...</div>
 
             <div class="onb-actions">
-              <button class="btn btn-primary btn-lg" id="onb-finish">Decouvrir ma communaute</button>
+              <button class="btn btn-primary btn-lg" id="onb-finish">Découvrir ma communauté</button>
             </div>
           </div>
         </div>
@@ -682,8 +1272,8 @@
           <!-- Filters -->
           <div class="admin-filters">
             <button class="admin-filter-tab active" data-filter="all">Tous</button>
-            <button class="admin-filter-tab" data-filter="licensed">Licencies</button>
-            <button class="admin-filter-tab" data-filter="unlicensed">Non-licencies</button>
+            <button class="admin-filter-tab" data-filter="licensed">Licenciés</button>
+            <button class="admin-filter-tab" data-filter="unlicensed">Non-licenciés</button>
             <button class="btn btn-secondary btn-sm" id="admin-toggle-add-server">+ Ajouter serveur</button>
           </div>
 
@@ -717,6 +1307,7 @@
                   <th>Guild ID</th>
                   <th>Membres</th>
                   <th>Licence</th>
+                  <th>Visibilite</th>
                   <th>Label</th>
                   <th>Prix</th>
                   <th>Expiration</th>
@@ -724,7 +1315,7 @@
                 </tr>
               </thead>
               <tbody id="admin-servers-tbody">
-                <tr><td colspan="8" class="admin-loading">Chargement...</td></tr>
+                <tr><td colspan="9" class="admin-loading">Chargement...</td></tr>
               </tbody>
             </table>
           </div>
@@ -737,11 +1328,18 @@
         <!-- Sub-view 1: Server list -->
         <div id="browse-servers">
           <div class="browse-servers-header">
-            <h2>Communautes</h2>
-            <p class="browse-servers-subtitle">Rejoins la communaute de ton streamer ou serveur Discord prefere</p>
+            <h2>Communautés</h2>
+            <p class="browse-servers-subtitle">Trouve des joueurs dans ta communauté et lance une partie</p>
           </div>
           <div class="servers-grid" id="servers-grid">
-            <div class="loading-state">Chargement des communautes...</div>
+            <div class="loading-state">Chargement des communautés...</div>
+          </div>
+
+          <!-- Tournaments section -->
+          <div id="browse-tournaments" class="browse-tournaments-section">
+            <h2>Tournois a venir</h2>
+            <p class="browse-tournaments-subtitle">Inscris-toi aux prochains tournois de tes communautes</p>
+            <div id="tournaments-grid" class="tournaments-grid"></div>
           </div>
         </div>
 
@@ -800,6 +1398,20 @@
             <div id="lfg-posts-list"></div>
           </div>
 
+          <!-- Tournament section in server detail -->
+          <div class="tournament-section" id="server-tournaments-section">
+            <h3>Tournois</h3>
+            <div id="server-tournaments-list"></div>
+          </div>
+
+        </div>
+
+        <!-- Sub-view 3: Tournament detail (hidden by default) -->
+        <div id="browse-tournament-detail" class="hidden">
+          <div class="tournament-detail-nav">
+            <button class="btn btn-ghost btn-sm" id="btn-back-tournaments">&larr; Retour</button>
+          </div>
+          <div id="tournament-detail-body" class="tournament-detail-body"></div>
         </div>
 
       </section>

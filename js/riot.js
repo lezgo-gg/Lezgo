@@ -47,7 +47,7 @@ export function initRiotVerification() {
     }
 
     btn.disabled = true;
-    btn.textContent = 'Verification...';
+    btn.textContent = 'Vérification...';
     resultDiv.classList.add('hidden');
 
     try {
@@ -55,7 +55,7 @@ export function initRiotVerification() {
 
       resultDiv.classList.remove('hidden', 'error');
       resultDiv.classList.add('success');
-      resultDiv.textContent = `Compte verifie : ${gameName}#${tagLine}`;
+      resultDiv.textContent = `Compte vérifié : ${gameName}#${tagLine}`;
 
       resultDiv.dataset.puuid = data.puuid;
 
@@ -66,7 +66,7 @@ export function initRiotVerification() {
       rankDisplay.innerHTML = `
         <div class="rank-verified">
           <span class="rank-${data.rank}">${rankLabel}</span>
-          <span style="color: var(--success); font-size: 0.85rem">&#10003; Verifie</span>
+          <span style="color: var(--success); font-size: 0.85rem">&#10003; Vérifié</span>
         </div>
         ${statsLine}
       `;
@@ -81,7 +81,7 @@ export function initRiotVerification() {
       rankDisplay.dataset.division = '';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Verifier';
+      btn.textContent = 'Vérifiér';
     }
   });
 }

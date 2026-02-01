@@ -390,7 +390,7 @@ export async function fetchFullPlayerData(puuid, onProgress) {
     if (onProgress) onProgress(steps.done, steps.total, label);
   };
 
-  onProgress?.(0, 1, 'Chargement des donnees...');
+  onProgress?.(0, 1, 'Chargement des données...');
   const [summonerData, masteryData, matchIds] = await Promise.all([
     fetchSummoner(puuid),
     fetchMastery(puuid, 10),
