@@ -7,6 +7,14 @@ export default defineConfig(({ mode }) => {
     plugins: [
       riotApiProxy(env.VITE_RIOT_API_KEY),
     ],
+    server: {
+      proxy: {
+        '/api/admin': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      },
+    },
   };
 });
 

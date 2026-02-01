@@ -130,8 +130,6 @@ async function showPlayerProfile(puuid, riotName, riotTag, preloadedAnalytics) {
   if (profilTab) profilTab.classList.add('hidden');
 
   // Hide own-user action buttons
-  document.getElementById('btn-analyze').classList.add('hidden');
-  document.getElementById('btn-reanalyze').classList.add('hidden');
   document.getElementById('btn-find-duos').classList.add('hidden');
   document.getElementById('last-analyzed-label').classList.add('hidden');
 
@@ -287,8 +285,6 @@ export function restoreOwnProfile() {
   if (profilTab) profilTab.classList.remove('hidden');
 
   // Restore own-user action buttons visibility (renderDashboard will set correct state)
-  document.getElementById('btn-analyze').classList.remove('hidden');
-  document.getElementById('btn-reanalyze').classList.remove('hidden');
   document.getElementById('btn-find-duos').classList.remove('hidden');
   document.getElementById('last-analyzed-label').classList.remove('hidden');
 
@@ -370,14 +366,6 @@ export function initDashboard(userId, profile, onFindDuos) {
 
   if (!dashboardInitialized) {
     dashboardInitialized = true;
-
-    document.getElementById('btn-analyze').addEventListener('click', () => {
-      triggerAnalysis(currentProfile.riot_puuid, currentUserId);
-    });
-
-    document.getElementById('btn-reanalyze').addEventListener('click', () => {
-      triggerAnalysis(currentProfile.riot_puuid, currentUserId);
-    });
 
     document.getElementById('btn-find-duos').addEventListener('click', () => {
       if (onFindDuosCallback) onFindDuosCallback();
@@ -472,23 +460,21 @@ async function renderDashboard(profile) {
   const ctaEl = document.getElementById('dashboard-cta');
   const analyticsEl = document.getElementById('dashboard-analytics');
 
-  // Action bar state
+  // Hide manual analyze/reanalyze buttons (auto-analysis replaces them)
   const analyzeBtn = document.getElementById('btn-analyze');
   const reanalyzeBtn = document.getElementById('btn-reanalyze');
   const findDuosBtn = document.getElementById('btn-find-duos');
+  analyzeBtn.classList.add('hidden');
+  reanalyzeBtn.classList.add('hidden');
 
   if (analytics && analytics.overview && analytics.overview.totalGames > 0) {
     ctaEl.classList.add('hidden');
     analyticsEl.classList.remove('hidden');
-    analyzeBtn.classList.add('hidden');
-    reanalyzeBtn.classList.remove('hidden');
     findDuosBtn.classList.remove('hidden');
     renderAnalytics(analytics, profile);
   } else {
-    ctaEl.classList.remove('hidden');
+    ctaEl.classList.add('hidden');
     analyticsEl.classList.add('hidden');
-    analyzeBtn.classList.remove('hidden');
-    reanalyzeBtn.classList.add('hidden');
     findDuosBtn.classList.add('hidden');
   }
 
@@ -499,6 +485,18 @@ async function renderDashboard(profile) {
     initMatchHistory(profile.riot_puuid);
   } else {
     mhSection.classList.add('hidden');
+  }
+
+  // Auto-analysis: check if last_analyzed_at is null or > 30min
+  if (profile.riot_puuid && !viewingOtherPlayer) {
+    const THIRTY_MIN = 30 * 60 * 1000;
+    const lastAnalyzed = profile.last_analyzed_at ? new Date(profile.last_analyzed_at).getTime() : 0;
+    const elapsed = Date.now() - lastAnalyzed;
+
+    if (!lastAnalyzed || elapsed > THIRTY_MIN) {
+      // Auto-trigger analysis
+      triggerAnalysis(profile.riot_puuid, currentUserId);
+    }
   }
 }
 
@@ -553,11 +551,19 @@ async function renderAnalytics(analytics, profile) {
   // --- Trends ---
   renderTrends(analytics.trends);
 
-  // --- Last analyzed ---
+  // --- Last analyzed (relative time) ---
   const lastLabel = document.getElementById('last-analyzed-label');
   if (profile.last_analyzed_at) {
-    const d = new Date(profile.last_analyzed_at);
-    lastLabel.textContent = `Derniere analyse : ${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+    const elapsed = Date.now() - new Date(profile.last_analyzed_at).getTime();
+    const mins = Math.floor(elapsed / 60000);
+    let timeText;
+    if (mins < 1) timeText = "a l'instant";
+    else if (mins < 60) timeText = `il y a ${mins} min`;
+    else {
+      const hours = Math.floor(mins / 60);
+      timeText = `il y a ${hours}h`;
+    }
+    lastLabel.textContent = `Derniere analyse : ${timeText}`;
   }
 }
 
@@ -1635,8 +1641,10 @@ async function buildTeamsHtml(team1, team2, playerTeamId) {
 }
 
 // ===== ANALYSIS TRIGGER =====
+let analysisInProgress = false;
 
 async function triggerAnalysis(puuid, userId) {
+  if (analysisInProgress) return;
   if (!puuid) {
     window.showToast('PUUID introuvable. Verifie ton Riot ID d\'abord.', 'error');
     return;
@@ -1648,8 +1656,7 @@ async function triggerAnalysis(puuid, userId) {
   const progressFill = document.getElementById('progress-fill');
   const progressLabel = document.getElementById('progress-label');
 
-  analyzeBtn.disabled = true;
-  reanalyzeBtn.disabled = true;
+  analysisInProgress = true;
   progressDiv.classList.remove('hidden');
   progressFill.style.width = '0%';
 
@@ -1683,14 +1690,15 @@ async function triggerAnalysis(puuid, userId) {
     currentProfile.last_analyzed_at = new Date().toISOString();
 
     window.showToast('Analyse terminee !', 'success');
+
+    // Re-render without re-triggering auto-analysis (flag prevents re-entry)
     renderDashboard(currentProfile);
 
   } catch (err) {
     console.error('Analysis error:', err);
     window.showToast('Erreur d\'analyse: ' + err.message, 'error');
   } finally {
-    analyzeBtn.disabled = false;
-    reanalyzeBtn.disabled = false;
+    analysisInProgress = false;
     progressDiv.classList.add('hidden');
   }
 }

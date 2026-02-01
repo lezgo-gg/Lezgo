@@ -37,7 +37,9 @@ export async function loadServers() {
   grid.innerHTML = '<div class="loading-state">Chargement des communautes...</div>';
 
   try {
-    const servers = await loadAllServers();
+    const allServers = await loadAllServers();
+    // Only show licensed servers in browse
+    const servers = allServers.filter(s => s.licensed);
     renderServers(servers);
   } catch (err) {
     grid.innerHTML = `<div class="empty-state">Erreur: ${escapeHtml(err.message)}</div>`;

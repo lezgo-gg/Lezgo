@@ -320,6 +320,184 @@
         </div>
       </section>
 
+      <!-- Gate View (no license access) -->
+      <section id="view-gate" class="view hidden">
+        <div class="gate-container">
+          <div class="gate-glow"></div>
+          <div class="gate-content">
+            <div class="gate-icon">&#128274;</div>
+            <h1>Acces reserve</h1>
+            <p class="gate-subtitle">Rejoins la communaute de ton streamer pour acceder a lezgo.gg</p>
+            <p class="gate-desc">Demande a ton streamer prefere de s'associer avec LFG.gg pour donner acces a sa communaute.</p>
+            <button class="btn btn-ghost btn-lg" id="gate-logout">Se deconnecter</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Onboarding View (first-time setup) -->
+      <section id="view-onboarding" class="view hidden">
+        <div class="onb-container">
+          <div class="onb-header">
+            <span class="logo">LFG</span><span class="logo-accent">.gg</span>
+            <div class="onb-progress">
+              <span class="onb-progress-dot current" data-step="1">1</span>
+              <span class="onb-progress-line"></span>
+              <span class="onb-progress-dot" data-step="2">2</span>
+              <span class="onb-progress-line"></span>
+              <span class="onb-progress-dot" data-step="3">3</span>
+            </div>
+          </div>
+
+          <!-- Step 1: Link Riot ID -->
+          <div id="onb-step-1" class="onb-step">
+            <h2>Lie ton compte Riot</h2>
+            <p class="onb-step-desc">Verifie ton identite LoL pour debloquer toutes les fonctionnalites.</p>
+            <div class="onb-riot-row">
+              <div class="form-group flex-1">
+                <label for="onb-riot-name">Game Name</label>
+                <input type="text" id="onb-riot-name" placeholder="Faker" />
+              </div>
+              <span class="riot-separator">#</span>
+              <div class="form-group" style="width: 120px">
+                <label for="onb-riot-tag">Tag</label>
+                <input type="text" id="onb-riot-tag" placeholder="EUW" />
+              </div>
+              <button type="button" class="btn btn-secondary" id="onb-verify-riot">Verifier</button>
+            </div>
+            <div id="onb-verify-result" class="onb-verify-result hidden"></div>
+            <div class="onb-actions">
+              <button class="btn btn-primary btn-lg" id="onb-next-1" disabled>Suivant</button>
+            </div>
+          </div>
+
+          <!-- Step 2: Complete profile -->
+          <div id="onb-step-2" class="onb-step hidden">
+            <h2>Complete ton profil</h2>
+            <p class="onb-step-desc">Ces infos aident a te matcher avec les bons joueurs.</p>
+
+            <div class="form-section">
+              <h3>Roles preferes</h3>
+              <div class="checkbox-group roles-group">
+                <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="TOP" /><span class="chip">TOP</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="JUNGLE" /><span class="chip">JGL</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="MID" /><span class="chip">MID</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="ADC" /><span class="chip">ADC</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-roles" value="SUPPORT" /><span class="chip">SUP</span></label>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Horaires de jeu</h3>
+              <div class="checkbox-group">
+                <label class="chip-checkbox"><input type="checkbox" name="onb-schedule" value="MATIN" /><span class="chip">Matin</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-schedule" value="APRES_MIDI" /><span class="chip">Aprem</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-schedule" value="SOIR" /><span class="chip">Soir</span></label>
+                <label class="chip-checkbox"><input type="checkbox" name="onb-schedule" value="NUIT" /><span class="chip">Nuit</span></label>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Style de jeu</h3>
+              <div class="radio-group">
+                <label class="chip-radio"><input type="radio" name="onb-play-style" value="tryhard" /><span class="chip">Tryhard Ranked</span></label>
+                <label class="chip-radio"><input type="radio" name="onb-play-style" value="chill" /><span class="chip">Chill (Normals/ARAM)</span></label>
+              </div>
+            </div>
+
+            <div class="onb-actions">
+              <button class="btn btn-primary btn-lg" id="onb-next-2">Suivant</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Profile ready -->
+          <div id="onb-step-3" class="onb-step hidden">
+            <h2>Ton profil est pret !</h2>
+            <p class="onb-step-desc">Voici un resume de ton profil.</p>
+
+            <div class="onb-summary-card">
+              <img id="onb-summary-avatar" class="onb-summary-avatar" src="" alt="" />
+              <div class="onb-summary-info">
+                <span class="onb-summary-name" id="onb-summary-name"></span>
+                <span class="onb-summary-riot" id="onb-summary-riot"></span>
+                <span class="onb-summary-rank" id="onb-summary-rank"></span>
+                <span class="onb-summary-roles" id="onb-summary-roles"></span>
+              </div>
+            </div>
+
+            <div class="onb-analysis-status" id="onb-analysis-status">Analyse en cours...</div>
+
+            <div class="onb-actions">
+              <button class="btn btn-primary btn-lg" id="onb-finish">Decouvrir ma communaute</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin View -->
+      <section id="view-admin" class="view hidden">
+        <div class="container admin-container">
+          <div class="admin-header">
+            <h2>Admin Dashboard</h2>
+            <p class="admin-subtitle">Gestion des licences et serveurs</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="admin-stats" id="admin-stats">
+            <div class="admin-stat-card"><span class="admin-stat-value">-</span><span class="admin-stat-label">Chargement...</span></div>
+          </div>
+
+          <!-- Filters -->
+          <div class="admin-filters">
+            <button class="admin-filter-tab active" data-filter="all">Tous</button>
+            <button class="admin-filter-tab" data-filter="licensed">Licencies</button>
+            <button class="admin-filter-tab" data-filter="unlicensed">Non-licencies</button>
+            <button class="btn btn-secondary btn-sm" id="admin-toggle-add-server">+ Ajouter serveur</button>
+          </div>
+
+          <!-- Add server form (hidden) -->
+          <div id="admin-add-server-container" class="admin-add-server hidden">
+            <form id="admin-add-server-form">
+              <div class="admin-add-row">
+                <div class="form-group flex-1">
+                  <label for="admin-add-guild-id">Guild ID</label>
+                  <input type="text" id="admin-add-guild-id" placeholder="123456789012345678" required />
+                </div>
+                <div class="form-group flex-1">
+                  <label for="admin-add-guild-name">Nom du serveur</label>
+                  <input type="text" id="admin-add-guild-name" placeholder="Mon serveur" required />
+                </div>
+                <div class="form-group flex-1">
+                  <label for="admin-add-guild-icon">Icon URL (optionnel)</label>
+                  <input type="text" id="admin-add-guild-icon" placeholder="abc123hash" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Servers table -->
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Serveur</th>
+                  <th>Guild ID</th>
+                  <th>Membres</th>
+                  <th>Licence</th>
+                  <th>Label</th>
+                  <th>Prix</th>
+                  <th>Expiration</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-servers-tbody">
+                <tr><td colspan="8" class="admin-loading">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- Browse View -->
       <section id="view-browse" class="view hidden">
 

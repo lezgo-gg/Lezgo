@@ -3,9 +3,13 @@ import { initAuthModal, openAuthModal, getDiscordInfo, logout } from './auth.js'
 import { initRiotVerification } from './riot.js';
 import { loadProfile, fillProfileForm, resetProfileForm, setDiscordInfo, initProfileForm } from './profile.js';
 import { initBrowse, loadServers, loadServerDetail, getPlayerCount } from './browse.js';
-
 import { initDashboard, updateDashboardProfile, restoreOwnProfile, isViewingOtherPlayer } from './dashboard.js';
 import { joinServerByGuildId } from './servers.js';
+import { initOnboarding } from './onboarding.js';
+import { initAdmin } from './admin.js';
+
+// --- Constants ---
+const ADMIN_DISCORD_ID = '713053980464513147';
 
 // --- Toast system ---
 const toastContainer = document.createElement('div');
@@ -23,6 +27,7 @@ window.showToast = function (message, type = 'success') {
 // --- State ---
 let currentUser = null;
 let currentProfileData = null;
+let isAdmin = false;
 
 // --- View management ---
 function showView(viewId) {
@@ -62,8 +67,24 @@ function showProfileTab(tabId) {
 window._showView = showView;
 window._showProfileTab = showProfileTab;
 
+// --- Access check: is user member of a licensed server? ---
+async function hasLicensedAccess(userId) {
+  const { data, error } = await supabase
+    .from('server_members')
+    .select('server_id, servers!inner(licensed)')
+    .eq('user_id', userId)
+    .eq('servers.licensed', true)
+    .limit(1);
+
+  if (error) {
+    console.error('License check error:', error);
+    return false;
+  }
+  return data && data.length > 0;
+}
+
 // --- Navbar ---
-function updateNavbar(user) {
+function updateNavbar(user, showAdminBtn = false) {
   const actions = document.getElementById('navbar-actions');
 
   if (user) {
@@ -72,8 +93,13 @@ function updateNavbar(user) {
       ? `<img class="navbar-avatar" src="${discordInfo.discord_avatar}" alt="" />`
       : '';
 
+    const adminBtnHtml = showAdminBtn
+      ? '<button class="btn btn-ghost admin-nav-btn" id="nav-admin">Admin</button>'
+      : '';
+
     actions.innerHTML = `
       <div class="navbar-user">
+        ${adminBtnHtml}
         <button class="btn btn-ghost" id="nav-browse">Communautes</button>
         <button class="btn btn-ghost" id="nav-profile">Mon Profil</button>
         <button class="btn btn-ghost" id="nav-logout">
@@ -82,6 +108,14 @@ function updateNavbar(user) {
         </button>
       </div>
     `;
+
+    if (showAdminBtn) {
+      document.getElementById('nav-admin').addEventListener('click', () => {
+        showView('view-admin');
+        initAdmin();
+      });
+    }
+
     document.getElementById('nav-browse').addEventListener('click', () => {
       showView('view-browse');
       loadServers();
@@ -110,37 +144,26 @@ function updateNavbar(user) {
 async function handleAuthChange(session) {
   if (session?.user) {
     currentUser = session.user;
-    updateNavbar(session.user);
+    const discordInfo = getDiscordInfo(session.user);
+    setDiscordInfo(discordInfo);
 
-    // Check for pending server join (from ?server= URL)
+    const profile = await loadProfile(session.user.id);
+    currentProfileData = profile;
+
+    // Check admin status
+    isAdmin = discordInfo?.discord_id === ADMIN_DISCORD_ID;
+    updateNavbar(session.user, isAdmin);
+
+    // --- Admin: full access, skip gate ---
+    if (isAdmin) {
+      await handleNormalAccess(session, profile, discordInfo);
+      return;
+    }
+
+    // --- Check for pending server join (from ?server= URL) ---
     const pendingGuildId = sessionStorage.getItem('pendingServer');
     if (pendingGuildId) {
       sessionStorage.removeItem('pendingServer');
-      const discordInfo = getDiscordInfo(session.user);
-      setDiscordInfo(discordInfo);
-
-      const profile = await loadProfile(session.user.id);
-      currentProfileData = profile;
-
-      initProfileForm(session.user.id, async () => {
-        const updatedProfile = await loadProfile(session.user.id);
-        currentProfileData = updatedProfile;
-        if (updatedProfile) {
-          initDashboard(session.user.id, updatedProfile, () => {
-            showView('view-browse');
-            initBrowse(session.user.id, updatedProfile);
-          });
-          updateDashboardProfile(updatedProfile);
-        }
-      });
-
-      if (profile) {
-        fillProfileForm(profile);
-        initDashboard(session.user.id, profile, () => {
-          showView('view-browse');
-          initBrowse(session.user.id, profile);
-        });
-      }
 
       // Auto-join the server
       try {
@@ -149,52 +172,32 @@ async function handleAuthChange(session) {
         // may already be a member, ignore
       }
 
-      // Navigate to server detail
-      showView('view-browse');
-      initBrowse(session.user.id, profile);
-      // Small delay to ensure browse is initialized before loading detail
-      setTimeout(() => loadServerDetail(pendingGuildId), 100);
+      // Check if this server is licensed (grants access)
+      const hasAccess = await hasLicensedAccess(session.user.id);
+      if (hasAccess) {
+        await handleNormalAccess(session, profile, discordInfo, pendingGuildId);
+      } else {
+        showView('view-gate');
+        initGateLogout();
+      }
       return;
     }
 
-    const discordInfo = getDiscordInfo(session.user);
-    setDiscordInfo(discordInfo);
-
-    const profile = await loadProfile(session.user.id);
-    currentProfileData = profile;
-
-    initProfileForm(session.user.id, async () => {
-      const updatedProfile = await loadProfile(session.user.id);
-      currentProfileData = updatedProfile;
-      if (updatedProfile) {
-        initDashboard(session.user.id, updatedProfile, () => {
-          showView('view-browse');
-          initBrowse(session.user.id, updatedProfile);
-        });
-        updateDashboardProfile(updatedProfile);
-      }
-    });
-
-    if (profile) {
-      fillProfileForm(profile);
-      initDashboard(session.user.id, profile, () => {
-        showView('view-browse');
-        initBrowse(session.user.id, profile);
-      });
-      showView('view-profile');
-      if (profile.analytics && profile.analytics.overview && profile.analytics.overview.totalGames > 0) {
-        showProfileTab('tab-analyse');
-      } else {
-        showProfileTab('tab-form');
-      }
-    } else {
-      resetProfileForm();
-      showView('view-profile');
-      showProfileTab('tab-form');
+    // --- License gate check ---
+    const hasAccess = await hasLicensedAccess(session.user.id);
+    if (!hasAccess) {
+      showView('view-gate');
+      initGateLogout();
+      return;
     }
+
+    // --- Normal access flow ---
+    await handleNormalAccess(session, profile, discordInfo);
+
   } else {
     currentUser = null;
     currentProfileData = null;
+    isAdmin = false;
     updateNavbar(null);
     resetProfileForm();
 
@@ -205,6 +208,92 @@ async function handleAuthChange(session) {
     }
 
     showView('view-landing');
+  }
+}
+
+async function handleNormalAccess(session, profile, discordInfo, pendingGuildId) {
+  // --- Onboarding check: no profile or no riot_puuid ---
+  if (!profile || !profile.riot_puuid) {
+    showView('view-onboarding');
+    initOnboarding(session.user.id, discordInfo, async () => {
+      // Onboarding complete - reload profile and proceed
+      const updatedProfile = await loadProfile(session.user.id);
+      currentProfileData = updatedProfile;
+      fillProfileForm(updatedProfile);
+      initProfileForm(session.user.id, async () => {
+        const refreshed = await loadProfile(session.user.id);
+        currentProfileData = refreshed;
+        if (refreshed) {
+          initDashboard(session.user.id, refreshed, () => {
+            showView('view-browse');
+            initBrowse(session.user.id, refreshed);
+          });
+          updateDashboardProfile(refreshed);
+        }
+      });
+      if (updatedProfile) {
+        initDashboard(session.user.id, updatedProfile, () => {
+          showView('view-browse');
+          initBrowse(session.user.id, updatedProfile);
+        });
+      }
+      showView('view-browse');
+      initBrowse(session.user.id, updatedProfile);
+    });
+    return;
+  }
+
+  // --- Standard profile init ---
+  initProfileForm(session.user.id, async () => {
+    const updatedProfile = await loadProfile(session.user.id);
+    currentProfileData = updatedProfile;
+    if (updatedProfile) {
+      initDashboard(session.user.id, updatedProfile, () => {
+        showView('view-browse');
+        initBrowse(session.user.id, updatedProfile);
+      });
+      updateDashboardProfile(updatedProfile);
+    }
+  });
+
+  if (profile) {
+    fillProfileForm(profile);
+    initDashboard(session.user.id, profile, () => {
+      showView('view-browse');
+      initBrowse(session.user.id, profile);
+    });
+  }
+
+  // --- If pending server, go to server detail ---
+  if (pendingGuildId) {
+    showView('view-browse');
+    initBrowse(session.user.id, profile);
+    setTimeout(() => loadServerDetail(pendingGuildId), 100);
+    return;
+  }
+
+  // --- Default view ---
+  if (profile) {
+    showView('view-profile');
+    if (profile.analytics && profile.analytics.overview && profile.analytics.overview.totalGames > 0) {
+      showProfileTab('tab-analyse');
+    } else {
+      showProfileTab('tab-form');
+    }
+  } else {
+    resetProfileForm();
+    showView('view-profile');
+    showProfileTab('tab-form');
+  }
+}
+
+function initGateLogout() {
+  const btn = document.getElementById('gate-logout');
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', async () => {
+      await logout();
+    });
   }
 }
 

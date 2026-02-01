@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import { createClient } from '@supabase/supabase-js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -8,6 +9,19 @@ const API_KEY = process.env.RIOT_API_KEY;
 if (!API_KEY) {
   console.error('[API] RIOT_API_KEY manquant dans .env');
   process.exit(1);
+}
+
+// --- Supabase (service role for admin writes) ---
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ADMIN_DISCORD_ID = '713053980464513147';
+
+let supabaseAdmin = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  console.log('[Admin] Supabase service role client initialized');
+} else {
+  console.warn('[Admin] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing - admin routes disabled');
 }
 
 app.use(express.json());
@@ -36,6 +50,170 @@ async function riotFetch(url) {
   await rateLimiter.wait();
   return fetch(url, { headers: { 'X-Riot-Token': API_KEY } });
 }
+
+// =====================================================
+// ADMIN MIDDLEWARE - verify JWT and admin discord_id
+// =====================================================
+async function requireAdmin(req, res, next) {
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: 'Admin service not configured' });
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token manquant' });
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    // Decode the JWT to get user_id
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
+    // Fetch profile to get discord_id
+    const { data: profile, error: profileErr } = await supabaseAdmin
+      .from('profiles')
+      .select('discord_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileErr || !profile) {
+      // Fallback: check user_metadata from Discord OAuth
+      const discordId = user.user_metadata?.provider_id;
+      if (discordId !== ADMIN_DISCORD_ID) {
+        return res.status(403).json({ error: 'Acces refuse' });
+      }
+    } else if (profile.discord_id !== ADMIN_DISCORD_ID) {
+      return res.status(403).json({ error: 'Acces refuse' });
+    }
+
+    req.adminUser = user;
+    next();
+  } catch (err) {
+    console.error('[Admin] Auth error:', err.message);
+    return res.status(500).json({ error: 'Erreur authentification' });
+  }
+}
+
+// =====================================================
+// ADMIN ROUTES
+// =====================================================
+
+// GET /api/admin/stats - Global stats
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    // Total players
+    const { count: totalPlayers } = await supabaseAdmin
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+
+    // Licensed servers
+    const { count: licensedServers } = await supabaseAdmin
+      .from('servers')
+      .select('*', { count: 'exact', head: true })
+      .eq('licensed', true);
+
+    // Active players (last_analyzed_at < 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: activePlayers } = await supabaseAdmin
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gt('last_analyzed_at', sevenDaysAgo);
+
+    res.json({
+      totalPlayers: totalPlayers || 0,
+      licensedServers: licensedServers || 0,
+      activePlayers: activePlayers || 0,
+    });
+  } catch (err) {
+    console.error('[Admin] Stats error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/servers - List all servers with license info
+app.get('/api/admin/servers', requireAdmin, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('servers')
+      .select('*')
+      .order('member_count', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('[Admin] Servers list error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/servers - Add a server manually
+app.post('/api/admin/servers', requireAdmin, async (req, res) => {
+  try {
+    const { guild_id, guild_name, guild_icon } = req.body;
+    if (!guild_id || !guild_name) {
+      return res.status(400).json({ error: 'guild_id et guild_name requis' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('servers')
+      .upsert({
+        guild_id,
+        guild_name,
+        guild_icon: guild_icon || null,
+      }, { onConflict: 'guild_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Admin] Add server error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/license - Toggle license on/off
+app.post('/api/admin/license', requireAdmin, async (req, res) => {
+  try {
+    const { server_id, licensed, license_label, license_price, license_started_at, license_expires_at } = req.body;
+
+    if (!server_id) {
+      return res.status(400).json({ error: 'server_id requis' });
+    }
+
+    const updateData = { licensed: !!licensed };
+    if (licensed) {
+      updateData.license_label = license_label || null;
+      updateData.license_price = license_price != null ? license_price : null;
+      updateData.license_started_at = license_started_at || new Date().toISOString();
+      updateData.license_expires_at = license_expires_at || null;
+    } else {
+      // Keep the old data but set licensed to false
+      updateData.licensed = false;
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('servers')
+      .update(updateData)
+      .eq('id', server_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Admin] License toggle error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================================================
+// RIOT API ROUTES
+// =====================================================
 
 // --- POST /api/verify-riot ---
 app.post('/api/verify-riot', async (req, res) => {
