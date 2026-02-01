@@ -7,32 +7,26 @@ const TOUR_STEPS = [
   {
     target: null,
     title: 'Bienvenue sur Lezgo.gg !',
-    body: 'Voici un tour rapide des fonctionnalités. Tu peux le passer à tout moment.',
+    body: 'Tu fais maintenant partie de la communaute ! Voici un tour rapide.',
     position: 'center',
   },
   {
-    target: '#nav-browse',
-    title: 'Communautés',
-    body: 'Parcours les communautés partenaires, leurs joueurs LFG et leurs tournois.',
+    target: '#nav-profile',
+    title: 'Ton profil',
+    body: 'Retrouve ton rang, tes stats et lance une analyse de ton gameplay.',
     position: 'bottom',
   },
   {
-    target: '#servers-grid',
-    title: 'Les serveurs',
-    body: 'Clique sur une communauté pour rejoindre, voir ses annonces LFG et ses tournois.',
-    position: 'top',
+    target: '#nav-browse',
+    title: 'Ta communaute',
+    body: 'Decouvre les joueurs de ta communaute, les annonces LFG et les tournois.',
+    position: 'bottom',
   },
   {
     target: '#browse-tournaments',
     title: 'Tournois',
-    body: 'Retrouve ici tous les tournois à venir, inscris-toi en un clic.',
+    body: 'Inscris-toi aux tournois organises par ta communaute.',
     position: 'top',
-  },
-  {
-    target: '#nav-profile',
-    title: 'Mon Profil',
-    body: 'Accède à ton profil, lance ton analyse et découvre tes stats.',
-    position: 'bottom',
   },
 ];
 
