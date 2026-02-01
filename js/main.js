@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { initAuthModal, openAuthModal, getDiscordInfo, logout } from './auth.js';
 import { initRiotVerification } from './riot.js';
-import { loadProfile, fillProfileForm, resetProfileForm, setDiscordInfo, initProfileForm } from './profile.js';
+import { loadProfile, fillProfileForm, resetProfileForm, setDiscordInfo, initProfileForm, loadStreamerSection } from './profile.js';
 import { initBrowse, loadServers, loadServerDetail, getPlayerCount } from './browse.js';
 import { initDashboard, updateDashboardProfile, restoreOwnProfile, isViewingOtherPlayer } from './dashboard.js';
 import { joinServerByGuildId } from './servers.js';
@@ -179,6 +179,8 @@ async function handleAuthChange(session) {
       } else {
         showView('view-gate');
         initGateLogout();
+        const { initGateRequestStatus } = await import('./streamer-request.js');
+        await initGateRequestStatus(session.user, discordInfo);
       }
       return;
     }
@@ -188,6 +190,8 @@ async function handleAuthChange(session) {
     if (!hasAccess) {
       showView('view-gate');
       initGateLogout();
+      const { initGateRequestStatus } = await import('./streamer-request.js');
+      await initGateRequestStatus(session.user, discordInfo);
       return;
     }
 
@@ -258,6 +262,7 @@ async function handleNormalAccess(session, profile, discordInfo, pendingGuildId)
 
   if (profile) {
     fillProfileForm(profile);
+    loadStreamerSection();
     initDashboard(session.user.id, profile, () => {
       showView('view-browse');
       initBrowse(session.user.id, profile);

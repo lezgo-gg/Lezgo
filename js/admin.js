@@ -8,7 +8,7 @@ export async function initAdmin() {
     adminInitialized = true;
     bindAdminEvents();
   }
-  await Promise.all([loadAdminStats(), loadAdminServers()]);
+  await Promise.all([loadAdminStats(), loadAdminServers(), loadAdminRequests()]);
 }
 
 function bindAdminEvents() {
@@ -255,6 +255,147 @@ async function handleAddServer(e) {
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Ajouter';
+  }
+}
+
+// =====================================================
+// ADMIN REQUESTS MANAGEMENT
+// =====================================================
+
+async function loadAdminRequests() {
+  const list = document.getElementById('admin-requests-list');
+  const countBadge = document.getElementById('admin-requests-count');
+  if (!list) return;
+
+  list.innerHTML = '<p class="admin-loading">Chargement...</p>';
+
+  try {
+    const requests = await adminFetch('/api/admin/requests');
+
+    const pendingCount = requests.filter(r => r.status === 'pending' || r.status === 'payment_received').length;
+    if (countBadge) {
+      countBadge.textContent = pendingCount > 0 ? pendingCount : '';
+      countBadge.classList.toggle('hidden', pendingCount === 0);
+    }
+
+    if (requests.length === 0) {
+      list.innerHTML = '<p class="admin-empty">Aucune demande</p>';
+      return;
+    }
+
+    list.innerHTML = requests.map(req => {
+      const avatarUrl = req.discord_avatar || '';
+      const avatarHtml = avatarUrl
+        ? `<img class="admin-req-avatar" src="${esc(avatarUrl)}" alt="" />`
+        : '<span class="admin-req-avatar-placeholder"></span>';
+
+      const date = new Date(req.created_at).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      });
+
+      let statusBadge = '';
+      let actionsHtml = '';
+
+      switch (req.status) {
+        case 'pending':
+          statusBadge = '<span class="admin-badge admin-badge-pending">En attente</span>';
+          actionsHtml = `
+            <button class="btn btn-sm btn-primary admin-req-action" data-action="payment" data-id="${esc(req.id)}">Paiement recu</button>
+            <button class="btn btn-sm btn-ghost admin-req-action" data-action="reject" data-id="${esc(req.id)}">Rejeter</button>
+          `;
+          break;
+        case 'payment_received':
+          statusBadge = '<span class="admin-badge admin-badge-payment">Paiement recu</span>';
+          actionsHtml = `
+            <button class="btn btn-sm btn-primary admin-req-action" data-action="confirm" data-id="${esc(req.id)}">Activer la licence</button>
+            <button class="btn btn-sm btn-ghost admin-req-action" data-action="reject" data-id="${esc(req.id)}">Rejeter</button>
+          `;
+          break;
+        case 'active':
+          statusBadge = '<span class="admin-badge admin-badge-active">Actif</span>';
+          break;
+        case 'rejected':
+          statusBadge = '<span class="admin-badge admin-badge-rejected">Refuse</span>';
+          break;
+      }
+
+      const guildIconUrl = req.guild_icon
+        ? `https://cdn.discordapp.com/icons/${esc(req.guild_id)}/${esc(req.guild_icon)}.png?size=32`
+        : '';
+      const guildIconHtml = guildIconUrl
+        ? `<img class="admin-req-guild-icon" src="${guildIconUrl}" alt="" />`
+        : '';
+
+      return `
+        <div class="admin-req-card" data-status="${esc(req.status)}">
+          <div class="admin-req-user">
+            ${avatarHtml}
+            <div class="admin-req-user-info">
+              <span class="admin-req-username">${esc(req.discord_username || 'Utilisateur')}</span>
+              <span class="admin-req-date">${date}</span>
+            </div>
+          </div>
+          <div class="admin-req-server">
+            ${guildIconHtml}
+            <div>
+              <span class="admin-req-guild-name">${esc(req.guild_name)}</span>
+              <span class="admin-req-guild-id">${esc(req.guild_id)}</span>
+            </div>
+          </div>
+          <div class="admin-req-status">${statusBadge}</div>
+          <div class="admin-req-actions">${actionsHtml}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Bind action buttons
+    list.querySelectorAll('.admin-req-action').forEach(btn => {
+      btn.addEventListener('click', () => handleRequestAction(btn));
+    });
+
+  } catch (err) {
+    list.innerHTML = `<p class="admin-error">Erreur: ${esc(err.message)}</p>`;
+  }
+}
+
+async function handleRequestAction(btn) {
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '...';
+
+  try {
+    switch (action) {
+      case 'payment':
+        await adminFetch(`/api/admin/requests/${id}/payment`, { method: 'POST' });
+        window.showToast('Paiement marque comme recu');
+        break;
+
+      case 'confirm':
+        await adminFetch(`/api/admin/requests/${id}/confirm`, { method: 'POST' });
+        window.showToast('Licence activee !');
+        break;
+
+      case 'reject': {
+        const note = prompt('Raison du refus (optionnel):');
+        await adminFetch(`/api/admin/requests/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ admin_note: note || null }),
+        });
+        window.showToast('Demande rejetee');
+        break;
+      }
+    }
+
+    await loadAdminRequests();
+    await loadAdminServers();
+    await loadAdminStats();
+  } catch (err) {
+    window.showToast('Erreur: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = originalText;
   }
 }
 

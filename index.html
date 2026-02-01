@@ -186,8 +186,113 @@
                 </div>
               </div>
 
+              <div class="form-section hidden" id="streamer-section">
+                <h3>Abonnement Streamer</h3>
+
+                <!-- Twitch account -->
+                <div class="streamer-linked">
+                  <img id="streamer-twitch-avatar" class="streamer-twitch-avatar" src="" alt="" />
+                  <div class="streamer-linked-info">
+                    <span class="streamer-twitch-name" id="streamer-twitch-name"></span>
+                    <span class="streamer-twitch-type" id="streamer-twitch-type"></span>
+                  </div>
+                </div>
+
+                <!-- Subscription details -->
+                <div class="sub-details" id="sub-details">
+                  <div class="sub-row">
+                    <span class="sub-label">Statut</span>
+                    <span class="sub-value sub-status" id="sub-status"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Serveur</span>
+                    <span class="sub-value" id="sub-server-name"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Prix</span>
+                    <span class="sub-value" id="sub-price"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Debut</span>
+                    <span class="sub-value" id="sub-start"></span>
+                  </div>
+                  <div class="sub-row">
+                    <span class="sub-label">Expiration</span>
+                    <span class="sub-value" id="sub-expires"></span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="sub-actions">
+                  <a id="sub-renew-btn" class="btn btn-primary" href="#" target="_blank" rel="noopener">Renouveler</a>
+                  <button class="btn btn-ghost" id="sub-edit-server-btn">Modifier le serveur</button>
+                </div>
+
+                <!-- Edit server form (hidden) -->
+                <div id="sub-edit-server" class="sub-edit-server hidden">
+                  <div class="form-group">
+                    <label for="sub-guild-id">Guild ID</label>
+                    <input type="text" id="sub-guild-id" placeholder="123456789012345678" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="sub-guild-name">Nom du serveur</label>
+                    <input type="text" id="sub-guild-name" placeholder="Mon serveur Discord" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="sub-guild-icon">Icon hash (optionnel)</label>
+                    <input type="text" id="sub-guild-icon" placeholder="abc123hash" />
+                  </div>
+                  <div class="sub-edit-actions">
+                    <button class="btn btn-primary btn-sm" id="sub-save-server">Sauvegarder</button>
+                    <button class="btn btn-ghost btn-sm" id="sub-cancel-server">Annuler</button>
+                  </div>
+                </div>
+
+                <!-- Payment history -->
+                <div class="sub-history">
+                  <h4>Historique</h4>
+                  <div id="sub-history-list"></div>
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary btn-block">Sauvegarder mon profil</button>
+
+              <div class="form-section danger-zone">
+                <h3>Zone dangereuse</h3>
+                <p class="danger-zone-desc">La suppression de ton compte est irreversible. Toutes tes donnees seront effacees.</p>
+                <p class="danger-zone-desc danger-zone-warn hidden" id="delete-streamer-warn">
+                  Tu es streamer partenaire : supprimer ton compte desactivera la licence de ton serveur. Ta communaute perdra l'acces a lezgo.gg.
+                </p>
+                <button type="button" class="btn btn-danger" id="btn-delete-account">Supprimer mon compte</button>
+              </div>
             </form>
+          </div>
+
+          <!-- Delete Account Confirmation Modal -->
+          <div id="modal-delete-account" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content modal-delete-confirm">
+              <button class="modal-close" id="modal-delete-close">&times;</button>
+              <div class="delete-confirm-content">
+                <div class="delete-confirm-icon">&#9888;</div>
+                <h2>Supprimer ton compte ?</h2>
+                <p class="delete-confirm-desc">Cette action est <strong>irreversible</strong>. Toutes tes donnees seront supprimees :</p>
+                <ul class="delete-confirm-list">
+                  <li>Profil et statistiques</li>
+                  <li>Historique des matchs analyses</li>
+                  <li>Appartenances aux serveurs</li>
+                </ul>
+                <p class="delete-confirm-streamer hidden" id="delete-confirm-streamer">
+                  &#9888; <strong>Attention streamer :</strong> la licence de ton serveur sera desactivee. Toute ta communaute perdra l'acces a lezgo.gg immediatement.
+                </p>
+                <p class="delete-confirm-type">Tape <strong>SUPPRIMER</strong> pour confirmer</p>
+                <input type="text" id="delete-confirm-input" class="delete-confirm-input" placeholder="SUPPRIMER" autocomplete="off" />
+                <div class="delete-confirm-actions">
+                  <button class="btn btn-danger btn-block" id="btn-confirm-delete" disabled>Supprimer definitivement</button>
+                  <button class="btn btn-ghost btn-block" id="btn-cancel-delete">Annuler</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- TAB: Analyse -->
@@ -325,11 +430,129 @@
         <div class="gate-container">
           <div class="gate-glow"></div>
           <div class="gate-content">
-            <div class="gate-icon">&#128274;</div>
-            <h1>Acces reserve</h1>
-            <p class="gate-subtitle">Rejoins la communaute de ton streamer pour acceder a lezgo.gg</p>
-            <p class="gate-desc">Demande a ton streamer prefere de s'associer avec LFG.gg pour donner acces a sa communaute.</p>
-            <button class="btn btn-ghost btn-lg" id="gate-logout">Se deconnecter</button>
+
+            <!-- Default state: no request -->
+            <div id="gate-default">
+              <div class="gate-icon">&#128274;</div>
+              <h1>Acces reserve</h1>
+              <p class="gate-subtitle">Rejoins la communaute de ton streamer pour acceder a lezgo.gg</p>
+              <p class="gate-desc">Demande a ton streamer prefere de s'associer avec LFG.gg pour donner acces a sa communaute.</p>
+
+              <div class="gate-streamer-cta">
+                <p class="gate-streamer-label">Tu es streamer ?</p>
+                <button class="btn btn-primary btn-lg" id="gate-become-partner">Devenir partenaire lezgo.gg</button>
+              </div>
+            </div>
+
+            <!-- Request form -->
+            <div id="gate-form" class="hidden">
+              <div class="gate-icon">&#128640;</div>
+              <h1>Devenir partenaire</h1>
+              <p class="gate-subtitle">Remplis les infos de ton serveur Discord pour commencer</p>
+              <form id="gate-request-form" class="gate-request-form">
+                <div class="form-group">
+                  <label for="gate-guild-id">Guild ID</label>
+                  <input type="text" id="gate-guild-id" placeholder="123456789012345678" required />
+                </div>
+                <div class="form-group">
+                  <label for="gate-guild-name">Nom du serveur</label>
+                  <input type="text" id="gate-guild-name" placeholder="Mon serveur Discord" required />
+                </div>
+                <div class="form-group">
+                  <label for="gate-guild-icon">Icon hash (optionnel)</label>
+                  <input type="text" id="gate-guild-icon" placeholder="abc123hash" />
+                </div>
+                <div class="gate-form-actions">
+                  <button type="submit" class="btn btn-primary btn-lg">Envoyer la demande</button>
+                  <button type="button" class="btn btn-ghost" id="gate-cancel-form">Annuler</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Status: pending (no Twitch connected yet) -->
+            <div id="gate-status-twitch" class="hidden">
+              <div class="gate-icon twitch-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+              </div>
+              <h1>Connecte ton Twitch</h1>
+              <p class="gate-subtitle">Pour decouvrir ton offre personnalisee, connecte ton compte Twitch.</p>
+              <button class="btn btn-twitch btn-lg" id="gate-twitch-connect">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                Connecter Twitch
+              </button>
+              <p class="gate-desc">Nous utilisons tes stats pour calculer un prix adapte a ton audience.</p>
+            </div>
+
+            <!-- Status: pending (Twitch connected, price calculated) -->
+            <div id="gate-status-pricing" class="hidden">
+              <div class="gate-pricing-card">
+                <div class="gate-twitch-profile" id="gate-twitch-profile">
+                  <img id="gate-twitch-avatar" class="gate-twitch-avatar" src="" alt="" />
+                  <div class="gate-twitch-info">
+                    <span class="gate-twitch-name" id="gate-twitch-name"></span>
+                    <span class="gate-twitch-type" id="gate-twitch-type"></span>
+                  </div>
+                </div>
+                <div class="gate-twitch-stats">
+                  <div class="gate-stat">
+                    <span class="gate-stat-value" id="gate-stat-followers">-</span>
+                    <span class="gate-stat-label">Followers</span>
+                  </div>
+                  <div class="gate-stat">
+                    <span class="gate-stat-value" id="gate-stat-viewers">-</span>
+                    <span class="gate-stat-label">Viewers moy.</span>
+                  </div>
+                </div>
+                <div class="gate-price-display">
+                  <span class="gate-price-label">Ton offre mensuelle</span>
+                  <span class="gate-price-amount" id="gate-price-amount"></span>
+                  <span class="gate-price-period">EUR / mois</span>
+                </div>
+                <a id="gate-paypal-link" class="btn btn-primary btn-lg btn-block" href="#" target="_blank" rel="noopener">Payer via PayPal</a>
+                <p class="gate-desc">Une fois le paiement effectue, ton acces sera active sous 24h.</p>
+              </div>
+              <!-- Sur devis (500K+ followers) -->
+              <div id="gate-sur-devis" class="gate-sur-devis hidden">
+                <div class="gate-icon">&#128142;</div>
+                <h1>Offre sur mesure</h1>
+                <p class="gate-subtitle">Ton audience depasse 500K followers. Contacte-nous pour un devis personnalise.</p>
+                <a class="btn btn-primary btn-lg" href="https://discord.gg/lezgo" target="_blank" rel="noopener">Nous contacter</a>
+              </div>
+            </div>
+
+            <!-- Status: payment_received -->
+            <div id="gate-status-payment" class="hidden">
+              <div class="gate-icon">&#9203;</div>
+              <h1>Paiement recu !</h1>
+              <p class="gate-subtitle">Activation en cours...</p>
+              <div class="gate-loader">
+                <div class="gate-loader-bar"></div>
+              </div>
+              <p class="gate-desc">Ton acces sera active tres prochainement.</p>
+            </div>
+
+            <!-- Status: active -->
+            <div id="gate-status-active" class="hidden">
+              <div class="gate-icon">&#9989;</div>
+              <h1>Ton serveur est actif !</h1>
+              <p class="gate-subtitle">Ta licence est active. Ajoute le bot et accede a lezgo.gg.</p>
+              <div class="gate-active-actions">
+                <a id="gate-bot-invite" class="btn btn-discord btn-lg" href="#" target="_blank" rel="noopener">
+                  Ajouter le bot Discord
+                </a>
+                <button class="btn btn-primary btn-lg" id="gate-access-app">Acceder a lezgo.gg</button>
+              </div>
+            </div>
+
+            <!-- Status: rejected -->
+            <div id="gate-status-rejected" class="hidden">
+              <div class="gate-icon">&#10060;</div>
+              <h1>Demande refusee</h1>
+              <p class="gate-subtitle" id="gate-reject-reason"></p>
+              <button class="btn btn-primary btn-lg" id="gate-resubmit">Resoumettre une demande</button>
+            </div>
+
+            <button class="btn btn-ghost btn-lg gate-logout-btn" id="gate-logout">Se deconnecter</button>
           </div>
         </div>
       </section>
@@ -444,6 +667,16 @@
           <!-- Stats -->
           <div class="admin-stats" id="admin-stats">
             <div class="admin-stat-card"><span class="admin-stat-value">-</span><span class="admin-stat-label">Chargement...</span></div>
+          </div>
+
+          <!-- Requests Section -->
+          <div class="admin-requests-section">
+            <div class="admin-requests-header">
+              <h3>Demandes en attente <span class="admin-requests-badge" id="admin-requests-count"></span></h3>
+            </div>
+            <div class="admin-requests-list" id="admin-requests-list">
+              <p class="admin-loading">Chargement...</p>
+            </div>
           </div>
 
           <!-- Filters -->

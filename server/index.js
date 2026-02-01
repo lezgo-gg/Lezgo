@@ -6,6 +6,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.RIOT_API_KEY;
 
+// --- Twitch OAuth config ---
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
+const TWITCH_REDIRECT_URI = process.env.TWITCH_REDIRECT_URI;
+
 if (!API_KEY) {
   console.error('[API] RIOT_API_KEY manquant dans .env');
   process.exit(1);
@@ -49,6 +54,35 @@ const rateLimiter = {
 async function riotFetch(url) {
   await rateLimiter.wait();
   return fetch(url, { headers: { 'X-Riot-Token': API_KEY } });
+}
+
+// =====================================================
+// AUTH MIDDLEWARE - verify JWT (any logged-in user)
+// =====================================================
+async function requireAuth(req, res, next) {
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token manquant' });
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('[Auth] Error:', err.message);
+    return res.status(500).json({ error: 'Erreur authentification' });
+  }
 }
 
 // =====================================================
@@ -208,6 +242,588 @@ app.post('/api/admin/license', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[Admin] License toggle error:', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================================================
+// STREAMER REQUEST ROUTES
+// =====================================================
+
+// POST /api/request-license - Streamer submits a license request
+app.post('/api/request-license', requireAuth, async (req, res) => {
+  try {
+    const { guild_id, guild_name, guild_icon } = req.body;
+    if (!guild_id || !guild_name) {
+      return res.status(400).json({ error: 'guild_id et guild_name requis' });
+    }
+
+    const user = req.user;
+    const meta = user.user_metadata || {};
+    const identity = (user.identities || []).find(i => i.provider === 'discord');
+    const identityData = identity?.identity_data || {};
+    const discord_id = meta.provider_id || identityData.provider_id || '';
+    const discord_username = meta.full_name || meta.name || identityData.full_name || '';
+    const discord_avatar = meta.avatar_url || identityData.avatar_url || '';
+
+    // Check for duplicate pending/payment_received request for same guild
+    const { data: existing } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .eq('guild_id', guild_id)
+      .in('status', ['pending', 'payment_received']);
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ error: 'Une demande est deja en cours pour ce serveur' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .insert({
+        user_id: user.id,
+        discord_id,
+        discord_username,
+        discord_avatar,
+        guild_id,
+        guild_name,
+        guild_icon: guild_icon || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('[Request] Submit error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/my-requests - Streamer views their requests
+app.get('/api/my-requests', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('[Request] My requests error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/requests - Admin views all requests
+app.get('/api/admin/requests', requireAdmin, async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('[Admin] Requests list error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/requests/:id/payment - Admin marks payment received
+app.post('/api/admin/requests/:id/payment', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .update({ status: 'payment_received', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Demande introuvable ou statut invalide' });
+
+    res.json(data);
+  } catch (err) {
+    console.error('[Admin] Payment confirm error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/requests/:id/confirm - Admin activates the license
+app.post('/api/admin/requests/:id/confirm', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch the request
+    const { data: request, error: fetchErr } = await supabaseAdmin
+      .from('server_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !request) {
+      return res.status(404).json({ error: 'Demande introuvable' });
+    }
+
+    if (request.status !== 'payment_received') {
+      return res.status(400).json({ error: 'Le paiement doit etre confirme avant activation' });
+    }
+
+    // 1. Upsert server
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setMonth(expiresAt.getMonth() + (request.license_months || 1));
+
+    const { data: server, error: serverErr } = await supabaseAdmin
+      .from('servers')
+      .upsert({
+        guild_id: request.guild_id,
+        guild_name: request.guild_name,
+        guild_icon: request.guild_icon || null,
+        licensed: true,
+        license_label: request.license_label || 'Standard',
+        license_price: request.license_price || 29.99,
+        license_started_at: now.toISOString(),
+        license_expires_at: expiresAt.toISOString(),
+      }, { onConflict: 'guild_id' })
+      .select()
+      .single();
+
+    if (serverErr) throw serverErr;
+
+    // 2. Auto-join the streamer in server_members
+    if (request.user_id) {
+      await supabaseAdmin
+        .from('server_members')
+        .upsert(
+          { server_id: server.id, user_id: request.user_id },
+          { onConflict: 'server_id,user_id' }
+        );
+    }
+
+    // 3. Update request status
+    const { data: updated, error: updateErr } = await supabaseAdmin
+      .from('server_requests')
+      .update({
+        status: 'active',
+        server_id: server.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+
+    res.json(updated);
+  } catch (err) {
+    console.error('[Admin] Activate error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/requests/:id/reject - Admin rejects a request
+app.post('/api/admin/requests/:id/reject', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { admin_note } = req.body || {};
+
+    const { data, error } = await supabaseAdmin
+      .from('server_requests')
+      .update({
+        status: 'rejected',
+        admin_note: admin_note || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .in('status', ['pending', 'payment_received'])
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Demande introuvable ou deja traitee' });
+
+    res.json(data);
+  } catch (err) {
+    console.error('[Admin] Reject error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================================================
+// ACCOUNT DELETION
+// =====================================================
+
+// DELETE /api/my-account - Delete account and all associated data
+app.delete('/api/my-account', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log(`[Account] Deleting account for user ${userId}`);
+
+    // 1. Find active server requests (streamer subscriptions)
+    const { data: activeRequests } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, server_id, status')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    // 2. If streamer: deactivate their licensed servers → cuts community access
+    if (activeRequests && activeRequests.length > 0) {
+      for (const req of activeRequests) {
+        if (req.server_id) {
+          await supabaseAdmin
+            .from('servers')
+            .update({ licensed: false })
+            .eq('id', req.server_id);
+          console.log(`[Account] Deactivated server ${req.server_id}`);
+        }
+      }
+    }
+
+    // 3. Delete all server_requests for this user
+    await supabaseAdmin
+      .from('server_requests')
+      .delete()
+      .eq('user_id', userId);
+
+    // 4. Delete server_members entries (leaves all servers)
+    await supabaseAdmin
+      .from('server_members')
+      .delete()
+      .eq('user_id', userId);
+
+    // 5. Delete profile
+    await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    // 6. Delete the auth user
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) {
+      console.error(`[Account] Auth delete error: ${authError.message}`);
+      throw authError;
+    }
+
+    console.log(`[Account] User ${userId} fully deleted`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Account] Delete error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================================================
+// SUBSCRIPTION MANAGEMENT
+// =====================================================
+
+// GET /api/my-subscription - Full subscription data (request + server license info)
+app.get('/api/my-subscription', requireAuth, async (req, res) => {
+  try {
+    const { data: requests, error } = await supabaseAdmin
+      .from('server_requests')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const active = (requests || []).find(r => r.status === 'active');
+    if (!active) {
+      return res.json({ subscription: null, history: requests || [] });
+    }
+
+    // Fetch server license dates
+    let server = null;
+    if (active.server_id) {
+      const { data: srv } = await supabaseAdmin
+        .from('servers')
+        .select('id, guild_id, guild_name, guild_icon, licensed, license_label, license_price, license_started_at, license_expires_at')
+        .eq('id', active.server_id)
+        .single();
+      server = srv;
+    }
+
+    res.json({
+      subscription: { ...active, server },
+      history: requests || [],
+    });
+  } catch (err) {
+    console.error('[Subscription] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/my-subscription/server - Streamer updates their server info
+app.put('/api/my-subscription/server', requireAuth, async (req, res) => {
+  try {
+    const { guild_id, guild_name, guild_icon } = req.body;
+    if (!guild_id || !guild_name) {
+      return res.status(400).json({ error: 'guild_id et guild_name requis' });
+    }
+
+    // Find active request
+    const { data: requests } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, server_id')
+      .eq('user_id', req.user.id)
+      .eq('status', 'active');
+
+    const active = (requests || [])[0];
+    if (!active) {
+      return res.status(404).json({ error: 'Aucun abonnement actif' });
+    }
+
+    // Update request
+    await supabaseAdmin
+      .from('server_requests')
+      .update({ guild_id, guild_name, guild_icon: guild_icon || null, updated_at: new Date().toISOString() })
+      .eq('id', active.id);
+
+    // Update server if exists
+    if (active.server_id) {
+      await supabaseAdmin
+        .from('servers')
+        .update({ guild_id, guild_name, guild_icon: guild_icon || null })
+        .eq('id', active.server_id);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Subscription] Update server error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================================================
+// TWITCH OAUTH + DYNAMIC PRICING
+// =====================================================
+
+function calculatePrice(followers, avgViewers, broadcasterType) {
+  let base;
+  if (followers < 1000)        base = 299;
+  else if (followers < 5000)   base = 499;
+  else if (followers < 15000)  base = 799;
+  else if (followers < 50000)  base = 1299;
+  else if (followers < 150000) base = 2499;
+  else if (followers < 500000) base = 3999;
+  else return null; // "Sur devis" for 500K+
+
+  let viewerMult = 1.0;
+  if (avgViewers >= 100 && avgViewers < 500)       viewerMult = 1.15;
+  else if (avgViewers >= 500 && avgViewers < 2000)  viewerMult = 1.3;
+  else if (avgViewers >= 2000 && avgViewers < 5000) viewerMult = 1.6;
+  else if (avgViewers >= 5000)                      viewerMult = 2.0;
+
+  const partnerMult = broadcasterType === 'partner' ? 1.2 : 1.0;
+
+  const raw = base * viewerMult * partnerMult;
+  const rounded = Math.ceil(raw / 50) * 50 - 1;
+  return Math.max(299, rounded);
+}
+
+// POST /api/twitch/auth - Get Twitch OAuth URL (authenticated)
+app.post('/api/twitch/auth', requireAuth, async (req, res) => {
+  try {
+    if (!TWITCH_CLIENT_ID || !TWITCH_REDIRECT_URI) {
+      return res.status(503).json({ error: 'Twitch OAuth not configured' });
+    }
+
+    const { request_id } = req.body;
+    if (!request_id) {
+      return res.status(400).json({ error: 'request_id requis' });
+    }
+
+    // Verify the request belongs to the user
+    const { data: request, error } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, user_id, status')
+      .eq('id', request_id)
+      .single();
+
+    if (error || !request) {
+      return res.status(404).json({ error: 'Demande introuvable' });
+    }
+    if (request.user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Acces refuse' });
+    }
+    if (request.status !== 'pending') {
+      return res.status(400).json({ error: 'Cette demande ne peut plus etre modifiee' });
+    }
+
+    // Build Twitch OAuth URL with state = request_id:user_id
+    const state = `${request_id}:${req.user.id}`;
+    const params = new URLSearchParams({
+      client_id: TWITCH_CLIENT_ID,
+      redirect_uri: TWITCH_REDIRECT_URI,
+      response_type: 'code',
+      scope: 'user:read:email moderator:read:followers',
+      state,
+    });
+
+    res.json({ url: `https://id.twitch.tv/oauth2/authorize?${params.toString()}` });
+  } catch (err) {
+    console.error('[Twitch] Auth init error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/twitch/callback?code=X&state=Y - Twitch OAuth callback
+app.get('/api/twitch/callback', async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    if (!code || !state) {
+      return res.redirect('/?twitch_error=missing_params');
+    }
+
+    // Parse state
+    const [requestId, userId] = state.split(':');
+    if (!requestId || !userId) {
+      return res.redirect('/?twitch_error=invalid_state');
+    }
+
+    // Verify request exists and belongs to user
+    const { data: request, error: reqErr } = await supabaseAdmin
+      .from('server_requests')
+      .select('id, user_id, status')
+      .eq('id', requestId)
+      .single();
+
+    if (reqErr || !request || request.user_id !== userId) {
+      return res.redirect('/?twitch_error=invalid_request');
+    }
+
+    // Exchange code for access token
+    const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        client_secret: TWITCH_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: TWITCH_REDIRECT_URI,
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      console.error('[Twitch] Token exchange failed:', await tokenRes.text());
+      return res.redirect('/?twitch_error=token_failed');
+    }
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+
+    const twitchHeaders = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Client-Id': TWITCH_CLIENT_ID,
+    };
+
+    // Fetch Twitch user data
+    const userRes = await fetch('https://api.twitch.tv/helix/users', { headers: twitchHeaders });
+    if (!userRes.ok) {
+      return res.redirect('/?twitch_error=user_fetch_failed');
+    }
+    const userData = await userRes.json();
+    const twitchUser = userData.data?.[0];
+    if (!twitchUser) {
+      return res.redirect('/?twitch_error=no_user_data');
+    }
+
+    const twitchId = twitchUser.id;
+    const twitchUsername = twitchUser.login;
+    const twitchDisplayName = twitchUser.display_name;
+    const twitchAvatar = twitchUser.profile_image_url;
+    const broadcasterType = twitchUser.broadcaster_type || '';
+
+    // Fetch follower count
+    let followers = 0;
+    try {
+      const followRes = await fetch(
+        `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${twitchId}&first=1`,
+        { headers: twitchHeaders }
+      );
+      if (followRes.ok) {
+        const followData = await followRes.json();
+        followers = followData.total || 0;
+      }
+    } catch (e) {
+      console.error('[Twitch] Followers fetch error:', e.message);
+    }
+
+    // Estimate average viewers from recent VODs
+    let avgViewers = 0;
+    try {
+      // Check if currently live
+      const streamRes = await fetch(
+        `https://api.twitch.tv/helix/streams?user_id=${twitchId}`,
+        { headers: twitchHeaders }
+      );
+      let liveViewers = 0;
+      if (streamRes.ok) {
+        const streamData = await streamRes.json();
+        if (streamData.data?.length > 0) {
+          liveViewers = streamData.data[0].viewer_count || 0;
+        }
+      }
+
+      // Fetch recent VODs for average estimate
+      const videoRes = await fetch(
+        `https://api.twitch.tv/helix/videos?user_id=${twitchId}&type=archive&first=10`,
+        { headers: twitchHeaders }
+      );
+      if (videoRes.ok) {
+        const videoData = await videoRes.json();
+        const videos = videoData.data || [];
+        if (videos.length > 0) {
+          const totalViews = videos.reduce((sum, v) => sum + (v.view_count || 0), 0);
+          avgViewers = Math.round(totalViews / videos.length);
+        }
+      }
+
+      // Use live viewers if higher than VOD estimate
+      if (liveViewers > avgViewers) {
+        avgViewers = liveViewers;
+      }
+    } catch (e) {
+      console.error('[Twitch] Viewers estimate error:', e.message);
+    }
+
+    // Calculate price
+    const price = calculatePrice(followers, avgViewers, broadcasterType);
+
+    // Update the request with Twitch data
+    const { error: updateErr } = await supabaseAdmin
+      .from('server_requests')
+      .update({
+        twitch_id: twitchId,
+        twitch_username: twitchUsername,
+        twitch_display_name: twitchDisplayName,
+        twitch_avatar: twitchAvatar,
+        twitch_followers: followers,
+        twitch_broadcaster_type: broadcasterType,
+        twitch_avg_viewers: avgViewers,
+        license_price: price,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', requestId);
+
+    if (updateErr) {
+      console.error('[Twitch] Update request error:', updateErr.message);
+      return res.redirect('/?twitch_error=update_failed');
+    }
+
+    console.log(`[Twitch] ${twitchDisplayName} connected: ${followers} followers, ~${avgViewers} avg viewers, price=${price}`);
+    res.redirect('/?twitch_done=1');
+  } catch (err) {
+    console.error('[Twitch] Callback error:', err.message);
+    res.redirect('/?twitch_error=server_error');
   }
 });
 

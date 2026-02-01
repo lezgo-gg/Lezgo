@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       proxy: {
-        '/api/admin': {
+        '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
         },
