@@ -208,8 +208,9 @@ async function handleAuthChange(session) {
     }
 
     // --- Streamer flow: skip gate if returning from streamer onboarding ---
-    const pendingStreamerAction = sessionStorage.getItem('postLoginAction');
+    const pendingStreamerAction = localStorage.getItem('postLoginAction');
     if (pendingStreamerAction === 'streamer-tab') {
+      localStorage.removeItem('postLoginAction');
       await handleNormalAccess(session, profile, discordInfo, true);
       return;
     }
@@ -217,6 +218,19 @@ async function handleAuthChange(session) {
     // --- License gate check ---
     const hasAccess = testGate ? false : await hasLicensedAccess(session.user.id);
     if (!hasAccess) {
+      // Check if user is a streamer with an active request → bypass gate
+      const { data: streamerReqs } = await supabase
+        .from('server_requests')
+        .select('id, status')
+        .eq('user_id', session.user.id)
+        .in('status', ['pending', 'payment_received', 'active'])
+        .limit(1);
+
+      if (streamerReqs && streamerReqs.length > 0) {
+        await handleNormalAccess(session, profile, discordInfo, true);
+        return;
+      }
+
       showView('view-gate');
       initGateLogout();
       const { initGate } = await import('./gate.js');
@@ -243,14 +257,14 @@ async function handleAuthChange(session) {
       history.replaceState({}, '', location.pathname);
       try {
         const twitchData = JSON.parse(atob(twitchGuest.replace(/-/g, '+').replace(/_/g, '/')));
-        sessionStorage.setItem('lezgo_twitch_guest', JSON.stringify(twitchData));
+        localStorage.setItem('lezgo_twitch_guest', JSON.stringify(twitchData));
       } catch (e) {
         console.error('[Main] Failed to parse twitch_guest data:', e);
       }
     }
 
     // If we have guest Twitch data, show the streamer pricing flow
-    const guestTwitchData = sessionStorage.getItem('lezgo_twitch_guest');
+    const guestTwitchData = localStorage.getItem('lezgo_twitch_guest');
     if (guestTwitchData) {
       showView('view-profile');
       showProfileTab('tab-streamer');
@@ -329,10 +343,10 @@ async function handleNormalAccess(session, profile, discordInfo, goToStreamerTab
     });
   }
 
-  // --- Detect postLoginAction from sessionStorage ---
-  const postAction = sessionStorage.getItem('postLoginAction');
+  // --- Detect postLoginAction from localStorage ---
+  const postAction = localStorage.getItem('postLoginAction');
   if (postAction === 'streamer-tab') {
-    sessionStorage.removeItem('postLoginAction');
+    localStorage.removeItem('postLoginAction');
     goToStreamerTab = true;
   }
 

@@ -725,9 +725,9 @@ export async function initStreamerSection(user, discordInfo) {
   bindStreamerEvents(user, discordInfo);
 
   // Check if returning from guest Twitch flow (user just logged in with Discord)
-  const guestTwitchRaw = sessionStorage.getItem('lezgo_twitch_guest');
+  const guestTwitchRaw = localStorage.getItem('lezgo_twitch_guest');
   if (guestTwitchRaw) {
-    sessionStorage.removeItem('lezgo_twitch_guest');
+    localStorage.removeItem('lezgo_twitch_guest');
     try {
       const twitchData = JSON.parse(guestTwitchRaw);
       // Create the request
@@ -904,9 +904,9 @@ export function showGuestPricing(twitchData) {
       paypalLink.target = '';
       paypalLink.addEventListener('click', async (e) => {
         e.preventDefault();
-        // Store Twitch data and trigger Discord login
-        sessionStorage.setItem('lezgo_twitch_guest', JSON.stringify(twitchData));
-        sessionStorage.setItem('postLoginAction', 'streamer-tab');
+        // Store Twitch data and trigger Discord login (localStorage survives OAuth redirects)
+        localStorage.setItem('lezgo_twitch_guest', JSON.stringify(twitchData));
+        localStorage.setItem('postLoginAction', 'streamer-tab');
         // Import and call openAuthModal
         const { openAuthModal } = await import('./auth.js');
         openAuthModal();

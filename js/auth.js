@@ -33,7 +33,7 @@ export function initAuthModal() {
 
 async function loginWithDiscord() {
   const hasToken = !!sessionStorage.getItem('lezgo_access_token');
-  const isStreamerFlow = sessionStorage.getItem('postLoginAction') === 'streamer-tab';
+  const isStreamerFlow = localStorage.getItem('postLoginAction') === 'streamer-tab';
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!hasToken && !session && !isStreamerFlow) {
