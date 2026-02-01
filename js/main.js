@@ -452,25 +452,7 @@ async function init() {
     });
   }
 
-  // Demo video play/pause
-  document.querySelectorAll('.pricing-demo-video').forEach(container => {
-    const video = container.querySelector('video');
-    const playBtn = container.querySelector('.pricing-demo-play');
-    if (!video || !playBtn) return;
-    playBtn.addEventListener('click', () => {
-      if (video.paused) {
-        video.play();
-        container.classList.add('playing');
-      } else {
-        video.pause();
-        container.classList.remove('playing');
-      }
-    });
-    video.addEventListener('click', () => {
-      video.pause();
-      container.classList.remove('playing');
-    });
-  });
+
 
   // Logo click
   document.querySelector('.navbar-brand').addEventListener('click', () => {

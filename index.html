@@ -812,39 +812,246 @@
                       <span class="gate-stat-label">Viewers moy.</span>
                     </div>
                   </div>
-                  <div class="pricing-demos">
-                    <div class="pricing-demo-card">
-                      <div class="pricing-demo-video" data-video="discord-bot">
-                        <video muted loop playsinline preload="metadata" poster="/assets/demo-discord-thumb.jpg">
-                          <source src="/assets/demo-discord.mp4" type="video/mp4" />
-                        </video>
-                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
-                      </div>
-                      <strong>Ton Discord, automatisé</strong>
-                      <p>Le bot crée les channels vocaux, forme les groupes et notifie les joueurs. Tu n'as rien à gérer.</p>
+                </div>
+                <div class="showcase-features" style="margin-top:2rem;">
+                    <div class="showcase-features-header">
+                      <h2>Tout ce que <span class="text-gradient">ta licence</span> debloque</h2>
+                      <p>Communaute, LFG, tournois, analytics — tout est inclus.</p>
                     </div>
-                    <div class="pricing-demo-card">
-                      <div class="pricing-demo-video" data-video="matchmaking">
-                        <video muted loop playsinline preload="metadata" poster="/assets/demo-matchmaking-thumb.jpg">
-                          <source src="/assets/demo-matchmaking.mp4" type="video/mp4" />
-                        </video>
-                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
+
+                    <!-- COMMUNAUTE -->
+                    <div class="showcase-feature">
+                      <div class="showcase-panel">
+                        <span class="showcase-label">Tu configures</span>
+                        <h3 class="showcase-title">Ta communaute sur Lezgo</h3>
+                        <p class="showcase-desc">Selectionne ton serveur Discord, active la visibilite, et ta communaute apparait dans le hub.</p>
+                        <div class="showcase-mock">
+                          <div class="sc-form">
+                            <div class="server-card" style="pointer-events:none;">
+                              <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">R</div>
+                              <div class="server-card-info">
+                                <span class="server-card-name">Rift Academy</span>
+                                <span class="server-card-count" style="color:var(--success);font-weight:600;">&#10003; Selectionne</span>
+                              </div>
+                            </div>
+                            <div class="sc-toggle-row">
+                              <div class="sc-toggle"></div>
+                              Visible publiquement
+                            </div>
+                            <div class="sc-btn sc-btn-gold" style="margin-top:4px;">Activer la communaute</div>
+                          </div>
+                        </div>
                       </div>
-                      <strong>Viewer games & tournois</strong>
-                      <p>Matchmaking équilibré par rank en un clic. Tes viewers jouent ensemble même quand tu es offline.</p>
+                      <div class="showcase-slash"></div>
+                      <div class="showcase-panel">
+                        <span class="showcase-label showcase-label-gold">Tes joueurs voient</span>
+                        <h3 class="showcase-title">Leur serveur dans le hub</h3>
+                        <p class="showcase-desc">Ta communaute apparait dans la section Communautes, accessible a tous les joueurs.</p>
+                        <div class="showcase-mock">
+                          <div class="sc-server-grid">
+                            <div class="server-card" style="pointer-events:none;border-color:rgba(200,155,60,0.3);box-shadow:0 0 15px var(--gold-glow);">
+                              <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">R</div>
+                              <div class="server-card-info">
+                                <span class="server-card-name">Rift Academy</span>
+                                <span class="server-card-count">42 membres</span>
+                              </div>
+                            </div>
+                            <div class="server-card" style="pointer-events:none;">
+                              <div class="server-card-icon server-card-icon-placeholder" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:var(--gold);background:var(--bg-input);">N</div>
+                              <div class="server-card-info">
+                                <span class="server-card-name">Nexus Legends</span>
+                                <span class="server-card-count">38 membres</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="pricing-demo-card">
-                      <div class="pricing-demo-video" data-video="stats">
-                        <video muted loop playsinline preload="metadata" poster="/assets/demo-stats-thumb.jpg">
-                          <source src="/assets/demo-stats.mp4" type="video/mp4" />
-                        </video>
-                        <button class="pricing-demo-play" aria-label="Lire la démo"></button>
+
+                    <!-- LFG -->
+                    <div class="showcase-feature">
+                      <div class="showcase-panel">
+                        <span class="showcase-label">Le joueur poste</span>
+                        <h3 class="showcase-title">Une annonce LFG</h3>
+                        <p class="showcase-desc">Tes membres cherchent un groupe en quelques secondes : role, note, et c'est parti.</p>
+                        <div class="showcase-mock">
+                          <div class="sc-form">
+                            <div class="sc-select">Role recherche : MID</div>
+                            <div class="sc-input">Cherche duo ranked tryhard, vocal obligatoire</div>
+                            <div class="sc-row">
+                              <div class="sc-btn sc-btn-gold">Publier l'annonce</div>
+                              <div class="sc-btn sc-btn-outline">Annuler</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <strong>Stats & contenu</strong>
-                      <p>Profils vérifiés, classements communautaires, analyse de performance. Du contenu prêt à exploiter.</p>
+                      <div class="showcase-slash"></div>
+                      <div class="showcase-panel">
+                        <span class="showcase-label showcase-label-gold">La communaute voit</span>
+                        <h3 class="showcase-title">Les annonces en temps reel</h3>
+                        <p class="showcase-desc">Rang verifie, role, note, timer — tout pour trouver le bon coequipier.</p>
+                        <div class="showcase-mock">
+                          <div class="lfg-post" style="pointer-events:none;">
+                            <div class="lfg-post-user">
+                              <img class="lfg-post-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=K4ssadin&amp;backgroundColor=1a2040" alt="" />
+                              <div class="lfg-post-info">
+                                <span class="lfg-post-name">K4ssadin#EUW</span>
+                                <div class="lfg-post-meta">
+                                  <span class="player-rank rank-DIAMOND" style="font-size:0.72rem;padding:0.15rem 0.5rem;">Diamond III</span>
+                                  <span class="role-tag">MID</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="lfg-post-note">Cherche duo ranked tryhard, vocal obligatoire</div>
+                            <div class="lfg-post-actions">
+                              <span class="lfg-post-timer">2h14</span>
+                              <button class="btn btn-primary btn-sm" style="pointer-events:none;">Discord</button>
+                            </div>
+                          </div>
+                          <div class="lfg-post" style="pointer-events:none;">
+                            <div class="lfg-post-user">
+                              <img class="lfg-post-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=VayneSpotting&amp;backgroundColor=1a2040" alt="" />
+                              <div class="lfg-post-info">
+                                <span class="lfg-post-name">Vayne Spotting#BOT</span>
+                                <div class="lfg-post-meta">
+                                  <span class="player-rank rank-PLATINUM" style="font-size:0.72rem;padding:0.15rem 0.5rem;">Platinum III</span>
+                                  <span class="role-tag">ADC</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="lfg-post-note">Duo bot lane, je suis ADC main</div>
+                            <div class="lfg-post-actions">
+                              <span class="lfg-post-timer">1h03</span>
+                              <button class="btn btn-primary btn-sm" style="pointer-events:none;">Discord</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- TOURNOIS -->
+                    <div class="showcase-feature">
+                      <div class="showcase-panel">
+                        <span class="showcase-label">Tu crees</span>
+                        <h3 class="showcase-title">Un tournoi en quelques clics</h3>
+                        <p class="showcase-desc">Format, rang requis, recompense — tout est configurable.</p>
+                        <div class="showcase-mock">
+                          <div class="sc-form">
+                            <div class="sc-input">Rift Academy Weekly</div>
+                            <div class="sc-row">
+                              <div class="sc-select">Format : 5v5</div>
+                              <div class="sc-input">32 joueurs max</div>
+                            </div>
+                            <div class="sc-row">
+                              <div class="sc-select">Rang min : Silver</div>
+                              <div class="sc-select">Rang max : Diamond</div>
+                            </div>
+                            <div class="sc-input">20 EUR de RP</div>
+                            <div class="sc-btn sc-btn-gold" style="margin-top:4px;">Creer le tournoi</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="showcase-slash"></div>
+                      <div class="showcase-panel">
+                        <span class="showcase-label showcase-label-gold">Le resultat</span>
+                        <h3 class="showcase-title">Un tournoi pret a jouer</h3>
+                        <p class="showcase-desc">Inscriptions automatiques, verification de rang, participants en temps reel.</p>
+                        <div class="showcase-mock">
+                          <div class="tournament-card sc-glow" style="pointer-events:none;cursor:default;border-color:rgba(200,155,60,0.3);box-shadow:0 0 20px var(--gold-glow);">
+                            <div class="tournament-card-header">
+                              <div class="tournament-card-servers">
+                                <span class="tournament-server-name">Rift Academy</span>
+                              </div>
+                              <span class="tournament-status tournament-status-open">Inscriptions</span>
+                            </div>
+                            <h3 class="tournament-card-title">Rift Academy Weekly</h3>
+                            <div class="tournament-card-meta">
+                              <span>4 fev.</span>
+                              <span class="tournament-format-badge">5v5</span>
+                              <span>14/32</span>
+                            </div>
+                            <div class="tournament-card-prize">20 EUR de RP</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- ANALYTICS -->
+                    <div class="showcase-feature">
+                      <div class="showcase-panel">
+                        <span class="showcase-label">Le joueur lance</span>
+                        <h3 class="showcase-title">Son analyse de gameplay</h3>
+                        <p class="showcase-desc">Un clic, et l'app analyse ses dernieres ranked pour generer un profil complet.</p>
+                        <div class="showcase-mock">
+                          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0;">
+                            <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a2040,#2a3060);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                            </div>
+                            <div class="sc-btn sc-btn-gold" style="font-size:0.9rem;padding:12px 28px;">Lancer l'analyse</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="showcase-slash"></div>
+                      <div class="showcase-panel">
+                        <span class="showcase-label showcase-label-gold">Il obtient</span>
+                        <h3 class="showcase-title">Un dashboard complet</h3>
+                        <p class="showcase-desc">Stats, champion pool, playstyle, forces/faiblesses — tout pour progresser.</p>
+                        <div class="showcase-mock">
+                          <div class="sc-stats-grid">
+                            <div class="stat-card stat-neutral">
+                              <span class="stat-card-value">3.42</span>
+                              <span class="stat-card-label">KDA</span>
+                            </div>
+                            <div class="stat-card stat-good">
+                              <span class="stat-card-value">54.2%</span>
+                              <span class="stat-card-label">Winrate</span>
+                            </div>
+                            <div class="stat-card stat-neutral">
+                              <span class="stat-card-value">7.1</span>
+                              <span class="stat-card-label">CS/min</span>
+                            </div>
+                            <div class="stat-card stat-good">
+                              <span class="stat-card-value">62%</span>
+                              <span class="stat-card-label">Kill Part.</span>
+                            </div>
+                          </div>
+                          <div style="margin-top:14px;">
+                            <div class="playstyle-header" style="margin-bottom:0.5rem;">
+                              <span class="playstyle-type" style="font-size:0.9rem;">Joueur Agressif</span>
+                            </div>
+                            <div class="playstyle-bars">
+                              <div class="playstyle-bar-row">
+                                <span class="playstyle-bar-icon">&#9876;</span>
+                                <span class="playstyle-bar-label">Agressivite</span>
+                                <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:78%;background:var(--error);"></div></div>
+                                <span class="playstyle-bar-val">7</span>
+                              </div>
+                              <div class="playstyle-bar-row">
+                                <span class="playstyle-bar-icon">&#127805;</span>
+                                <span class="playstyle-bar-label">Farming</span>
+                                <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:89%;background:var(--gold);"></div></div>
+                                <span class="playstyle-bar-val">8</span>
+                              </div>
+                              <div class="playstyle-bar-row">
+                                <span class="playstyle-bar-icon">&#128065;</span>
+                                <span class="playstyle-bar-label">Vision</span>
+                                <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:56%;background:var(--rank-diamond);"></div></div>
+                                <span class="playstyle-bar-val">5</span>
+                              </div>
+                              <div class="playstyle-bar-row">
+                                <span class="playstyle-bar-icon">&#129309;</span>
+                                <span class="playstyle-bar-label">Teamplay</span>
+                                <div class="playstyle-bar-track"><div class="playstyle-bar-fill" style="width:67%;background:var(--success);"></div></div>
+                                <span class="playstyle-bar-val">6</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+                <div class="gate-pricing-card" style="margin-top:2rem;">
                   <div class="gate-price-display">
                     <span class="gate-price-label">Ton offre mensuelle</span>
                     <span class="gate-price-amount" id="streamer-price-amount"></span>
