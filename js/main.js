@@ -298,10 +298,10 @@ async function handleNormalAccess(session, profile, discordInfo, goToStreamerTab
       showView('view-browse');
       initBrowse(session.user.id, updatedProfile);
 
-      // Guide tour after onboarding
+      // Guide tour after onboarding (member tour)
       setTimeout(async () => {
         const { startTour, isTourDone } = await import('./guide.js');
-        if (!isTourDone()) startTour();
+        if (!isTourDone('member')) startTour('member');
         window.startTour = startTour;
       }, 600);
     });

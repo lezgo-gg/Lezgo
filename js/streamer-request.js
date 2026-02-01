@@ -284,7 +284,7 @@ function bindGuildSelectionAfterActivation(request) {
       } catch (err) {
         window.showToast('Erreur: ' + err.message, 'error');
         guildsBtn.disabled = false;
-        guildsBtn.textContent = 'Selectionner mon serveur';
+        guildsBtn.textContent = 'Sélectionner mon serveur';
       }
     });
   }
@@ -296,7 +296,7 @@ function renderPostActivationGuildPicker(guilds, request) {
   const selectDiv = document.getElementById('streamer-post-guild-select');
 
   if (guilds.length === 0) {
-    list.innerHTML = '<p class="empty-note">Aucun serveur ou tu es admin. Verifie tes permissions Discord.</p>';
+    list.innerHTML = '<p class="empty-note">Aucun serveur où tu es admin. Vérifie tes permissions Discord.</p>';
     picker.classList.remove('hidden');
     if (selectDiv) selectDiv.classList.add('hidden');
     return;
@@ -523,6 +523,12 @@ async function loadSubscriptionSection() {
 
     // Show subscription management state
     showStreamerStep('streamer-subscription');
+
+    // Streamer guide tour (first time seeing subscription dashboard)
+    setTimeout(async () => {
+      const { startTour, isTourDone } = await import('./guide.js');
+      if (!isTourDone('streamer')) startTour('streamer');
+    }, 600);
 
     // Twitch profile
     const avatar = document.getElementById('streamer-sub-twitch-avatar');
@@ -839,7 +845,7 @@ function bindGuestTwitchConnect() {
         });
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          throw new Error('Le serveur backend ne repond pas. Verifie qu\'il est bien demarre (port 3001).');
+          throw new Error('Le serveur backend ne répond pas. Vérifie qu\'il est bien démarré (port 3001).');
         }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erreur');

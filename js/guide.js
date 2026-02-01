@@ -1,13 +1,14 @@
 // === Guide Tour (post-onboarding) ===
 
-const LS_KEY = 'lezgo_tour_done';
+const LS_KEY_MEMBER = 'lezgo_tour_member_done';
+const LS_KEY_STREAMER = 'lezgo_tour_streamer_done';
 const PADDING = 8;
 
-const TOUR_STEPS = [
+const MEMBER_STEPS = [
   {
     target: null,
     title: 'Bienvenue sur Lezgo.gg !',
-    body: 'Tu fais maintenant partie de la communaute ! Voici un tour rapide.',
+    body: 'Tu fais maintenant partie de la communauté ! Voici un tour rapide.',
     position: 'center',
   },
   {
@@ -18,15 +19,42 @@ const TOUR_STEPS = [
   },
   {
     target: '#nav-browse',
-    title: 'Ta communaute',
-    body: 'Decouvre les joueurs de ta communaute, les annonces de groupe et les tournois.',
+    title: 'Ta communauté',
+    body: 'Découvre les joueurs de ta communauté, les annonces de groupe et les tournois.',
     position: 'bottom',
   },
   {
     target: '#browse-tournaments',
     title: 'Tournois',
-    body: 'Inscris-toi aux tournois organises par ta communaute.',
+    body: 'Inscris-toi aux tournois organisés par ta communauté.',
     position: 'top',
+  },
+];
+
+const STREAMER_STEPS = [
+  {
+    target: null,
+    title: 'Ton espace partenaire',
+    body: 'Bienvenue dans ta gestion Lezgo.gg ! Voici un aperçu rapide de ton tableau de bord.',
+    position: 'center',
+  },
+  {
+    target: '[data-tab="tab-streamer"]',
+    title: 'Espace Streamer',
+    body: 'Gère ta licence, ton serveur Discord et renouvelle ton abonnement ici.',
+    position: 'bottom',
+  },
+  {
+    target: '#nav-browse',
+    title: 'Ton serveur',
+    body: 'Retrouve tes joueurs, gère les annonces de groupe et organise des tournois.',
+    position: 'bottom',
+  },
+  {
+    target: '#nav-profile',
+    title: 'Ton profil',
+    body: 'Complète ton profil joueur et analyse tes parties.',
+    position: 'bottom',
   },
 ];
 
@@ -36,10 +64,14 @@ let tooltip = null;
 let currentStep = 0;
 let resizeTimer = null;
 let previousHighlight = null;
+let activeSteps = MEMBER_STEPS;
+let activeRole = 'member';
 
 // --- Public API ---
 
-export function startTour() {
+export function startTour(role = 'member') {
+  activeRole = role;
+  activeSteps = role === 'streamer' ? STREAMER_STEPS : MEMBER_STEPS;
   currentStep = 0;
   createOverlay();
   renderStep();
@@ -47,8 +79,9 @@ export function startTour() {
   window.addEventListener('resize', onResize);
 }
 
-export function isTourDone() {
-  return localStorage.getItem(LS_KEY) === '1';
+export function isTourDone(role = 'member') {
+  const key = role === 'streamer' ? LS_KEY_STREAMER : LS_KEY_MEMBER;
+  return localStorage.getItem(key) === '1';
 }
 
 // --- DOM creation ---
@@ -89,7 +122,7 @@ function renderStep() {
   }
 
   const isFirst = currentStep === 0;
-  const isLast = currentStep === TOUR_STEPS.length - 1;
+  const isLast = currentStep === activeSteps.length - 1;
   const isWelcome = step.target === null;
 
   // Remove previous highlight
@@ -116,7 +149,7 @@ function renderStep() {
     <div class="guide-tooltip-title">${step.title}</div>
     <div class="guide-tooltip-body">${step.body}</div>
     <div class="guide-nav">
-      <span class="guide-progress">${currentStep + 1}/${TOUR_STEPS.length}</span>
+      <span class="guide-progress">${currentStep + 1}/${activeSteps.length}</span>
       <div class="guide-nav-buttons">
         <button class="btn btn-ghost guide-btn-skip">Passer</button>
         ${!isFirst ? '<button class="btn btn-ghost guide-btn-prev">Précédent</button>' : ''}
@@ -138,8 +171,8 @@ function renderStep() {
 
 // Resolve step — skip if target missing (except null target = welcome)
 function resolveStep() {
-  while (currentStep < TOUR_STEPS.length) {
-    const step = TOUR_STEPS[currentStep];
+  while (currentStep < activeSteps.length) {
+    const step = activeSteps[currentStep];
     if (step.target === null) return step; // welcome step
     if (document.querySelector(step.target)) return step;
     currentStep++;
@@ -211,7 +244,7 @@ function positionTooltip(targetEl, position) {
 
 function nextStep() {
   currentStep++;
-  if (currentStep >= TOUR_STEPS.length) {
+  if (currentStep >= activeSteps.length) {
     endTour();
   } else {
     renderStep();
@@ -226,7 +259,8 @@ function prevStep() {
 }
 
 function endTour() {
-  localStorage.setItem(LS_KEY, '1');
+  const key = activeRole === 'streamer' ? LS_KEY_STREAMER : LS_KEY_MEMBER;
+  localStorage.setItem(key, '1');
 
   document.removeEventListener('keydown', onKeyDown);
   window.removeEventListener('resize', onResize);
@@ -277,7 +311,7 @@ function onResize() {
   resizeTimer = setTimeout(() => {
     if (!overlay) return;
 
-    const step = TOUR_STEPS[currentStep];
+    const step = activeSteps[currentStep];
     if (!step) return;
 
     const targetEl = step.target ? document.querySelector(step.target) : null;

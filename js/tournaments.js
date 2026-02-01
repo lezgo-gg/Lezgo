@@ -13,7 +13,7 @@ async function getAuthToken() {
 
 async function authFetch(url, options = {}) {
   const token = await getAuthToken();
-  if (!token) throw new Error('Non authentifie');
+  if (!token) throw new Error('Non authentifié');
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -371,7 +371,7 @@ async function refreshServerTournaments(serverId) {
   try {
     const tournaments = await loadUpcomingTournaments(serverId);
     if (tournaments.length === 0) {
-      container.innerHTML = '<p class="empty-note">Aucun tournoi a venir pour cette communaute.</p>';
+      container.innerHTML = '<p class="empty-note">Aucun tournoi à venir pour cette communauté.</p>';
       return;
     }
     renderTournamentCards(tournaments, container);
@@ -583,7 +583,7 @@ async function loadTargetServers(excludeServerId) {
     .order('guild_name');
 
   if (servers) {
-    select.innerHTML = '<option value="">Choisir une communaute...</option>' +
+    select.innerHTML = '<option value="">Choisir une communauté...</option>' +
       servers.map(s => `<option value="${s.id}">${escapeHtml(s.guild_name)}</option>`).join('');
   }
 }

@@ -4,7 +4,7 @@ export async function initGate(userId) {
 
   grid.innerHTML = `
     <div class="gate-discord-msg">
-      <p>Pour acceder a Lezgo.gg, rejoins un serveur Discord partenaire
+      <p>Pour accéder à Lezgo.gg, rejoins un serveur Discord partenaire
       et clique sur le bouton dans le salon <strong>#lfg</strong>.</p>
     </div>
   `;

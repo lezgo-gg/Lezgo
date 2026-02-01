@@ -84,7 +84,7 @@ async function handleVerifyRiot() {
     resultDiv.classList.add('onb-verify-success');
     resultDiv.innerHTML = `
       <span class="rank-${data.rank}">${rankLabel}</span>
-      <span class="onb-verify-check">&#10003; Verifie</span>
+      <span class="onb-verify-check">&#10003; Vérifié</span>
       ${data.wins || data.losses ? `<span class="onb-verify-stats">${data.wins}W / ${data.losses}L</span>` : ''}
     `;
 
@@ -96,7 +96,7 @@ async function handleVerifyRiot() {
     nextBtn.disabled = true;
   } finally {
     verifyBtn.disabled = false;
-    verifyBtn.textContent = 'Verifier';
+    verifyBtn.textContent = 'Vérifier';
   }
 }
 

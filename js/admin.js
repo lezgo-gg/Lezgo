@@ -129,7 +129,7 @@ async function loadAdminServers() {
         ? new Date(server.license_expires_at).toLocaleDateString('fr-FR')
         : '-';
 
-      const toggleLabel = server.licensed ? 'Desactiver' : 'Activer';
+      const toggleLabel = server.licensed ? 'Désactiver' : 'Activer';
       const toggleClass = server.licensed ? 'btn-ghost' : 'btn-primary';
 
       return `
@@ -189,7 +189,7 @@ async function handleToggleLicense(btn) {
   if (currentlyLicensed) {
     // Deactivate
     btn.disabled = true;
-    btn.textContent = 'Desactivation...';
+    btn.textContent = 'Désactivation...';
     try {
       await adminFetch('/api/admin/license', {
         method: 'POST',
@@ -203,7 +203,7 @@ async function handleToggleLicense(btn) {
     } catch (err) {
       window.showToast('Erreur: ' + err.message, 'error');
       btn.disabled = false;
-      btn.textContent = 'Desactiver';
+      btn.textContent = 'Désactiver';
     }
   } else {
     // Activate - show inline form
