@@ -3533,6 +3533,10 @@ a.mh-exp-name.mh-player-link:hover {
   justify-content: space-between;
   margin-bottom: 3rem;
 }
+.onb-logo {
+  display: flex;
+  align-items: baseline;
+}
 
 .onb-progress {
   display: flex;
@@ -3589,10 +3593,13 @@ a.mh-exp-name.mh-player-link:hover {
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
+.onb-riot-row .riot-separator {
+  margin-bottom: 0.45rem;
+}
 .onb-riot-row .btn {
-  height: 38px;
+  height: 40px;
   flex-shrink: 0;
-  align-self: flex-end;
+  margin-bottom: 0;
 }
 
 .onb-verify-result {
