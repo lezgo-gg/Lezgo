@@ -19,7 +19,7 @@ const TOUR_STEPS = [
   {
     target: '#nav-browse',
     title: 'Ta communaute',
-    body: 'Decouvre les joueurs de ta communaute, les annonces LFG et les tournois.',
+    body: 'Decouvre les joueurs de ta communaute, les annonces de groupe et les tournois.',
     position: 'bottom',
   },
   {
